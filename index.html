@@ -270,22 +270,22 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
     <span id="ap2-wrap" style="display:none"><span class="alert-pill ap-2" id="ap2"></span></span>
     <span id="ap1-wrap" style="display:none"><span class="alert-pill ap-1" id="ap1"></span></span>
     <div class="updated" id="updated">—</div>
-    <button class="refresh-btn" onclick="init()">↻ Refresh</button>
+    <button class="refresh-btn" id="refresh-btn" onclick="init()">↻ Refresh</button>
   </div>
 </div>
 
 <!-- TABS -->
 <div class="tabs">
-  <div class="tab active" onclick="showTab('brief',this)">Morning Brief</div>
-  <div class="tab" onclick="showTab('portfolio',this)">Portfolio</div>
+  <div class="tab active" onclick="showTab('portfolio',this)">Portfolio</div>
   <div class="tab" onclick="showTab('alerts',this)">Alerts</div>
   <div class="tab" onclick="showTab('news',this)">News</div>
+  <div class="tab" onclick="showTab('brief',this)">Morning Brief</div>
 </div>
 
 <!-- ══════════════════════════════════════════════ -->
 <!-- MORNING BRIEF PANEL                           -->
 <!-- ══════════════════════════════════════════════ -->
-<div class="panel active" id="panel-brief">
+<div class="panel" id="panel-brief">
   <div class="brief-page">
 
     <div class="brief-header">
@@ -351,7 +351,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 <!-- ══════════════════════════════════════════════ -->
 <!-- PORTFOLIO PANEL                               -->
 <!-- ══════════════════════════════════════════════ -->
-<div class="panel" id="panel-portfolio">
+<div class="panel active" id="panel-portfolio">
   <div class="status" id="status"></div>
   <div class="metrics">
     <div class="metric"><div class="metric-label">Total invested</div><div class="metric-val" id="m-cost">—</div><div class="metric-sub neu" id="m-pos">—</div></div>
