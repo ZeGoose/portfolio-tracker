@@ -626,13 +626,26 @@ function setBriefState(s){
 function setBriefStep(m){document.getElementById('brief-step').textContent=m;}
 
 async function generateBrief(force=false){
-  // Check cache — only regenerate if forced or not yet generated today
+  // Show loading immediately so user knows the button worked
+  setBriefState('loading');
+  setBriefStep('Starting up...');
+  document.getElementById('brief-error').style.display='none';
+
+  // Check cache after showing loading (only if not forced)
   if(!force){
     const cached=localStorage.getItem('watcher-brief');
-    if(cached){try{const{date,html}=JSON.parse(cached);if(date===new Date().toDateString()){document.getElementById('brief-body').innerHTML=html;setBriefState('body');document.getElementById('mkt-pills').innerHTML=localStorage.getItem('watcher-brief-pills')||'';return;}}}catch(e){}}
-
-  setBriefState('loading');
-  document.getElementById('brief-error').style.display='none';
+    if(cached){
+      try{
+        const{date,html}=JSON.parse(cached);
+        if(date===new Date().toDateString()){
+          document.getElementById('brief-body').innerHTML=html;
+          document.getElementById('mkt-pills').innerHTML=localStorage.getItem('watcher-brief-pills')||'';
+          setBriefState('body');
+          return;
+        }
+      }catch(e){}
+    }
+  }
 
   try{
     // Fetch market ETF proxies
@@ -646,35 +659,131 @@ async function generateBrief(force=false){
       for(const p of PORTFOLIO){try{prices[p.ticker]=await fetchQuote(p.ticker);}catch(e){}await sleep(180);}
     }
 
-    // Fetch general market news
-    setBriefStep('Pulling today's news…');
-    try{const r=await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);const d=await r.json();briefNews=(d||[]).filter(a=>a.headline).slice(0,20).map(a=>a.headline);}catch(e){}
+    // Fetch general market news + company-specific news from Finnhub
+    setBriefStep('Pulling the latest news...');
+    briefNews = [];
+    try {
+      // 1. General market news — broad macro, forex, commodities, economy
+      const categories = ['general', 'forex', 'merger'];
+      for (const cat of categories) {
+        try {
+          const r = await fetch(`https://finnhub.io/api/v1/news?category=${cat}&token=${FINNHUB_KEY}`);
+          const d = await r.json();
+          const items = (d||[]).filter(a=>a.headline&&a.summary).slice(0,8).map(a=>({
+            source: a.source||'Market',
+            headline: a.headline,
+            summary: (a.summary||'').slice(0,200),
+            type: 'general'
+          }));
+          briefNews.push(...items);
+        } catch(e) {}
+        await sleep(150);
+      }
+
+      // 2. Company-specific news for your most important holdings
+      const keyStocks = ['AAPL','AMZN','GOOGL','MSFT','NVDA','META','V','LLY'];
+      for (const ticker of keyStocks) {
+        try {
+          const now = new Date(), yesterday = new Date(now - 2*24*3600*1000);
+          const fmt = d => d.toISOString().slice(0,10);
+          const r = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${fmt(yesterday)}&to=${fmt(now)}&token=${FINNHUB_KEY}`);
+          const d = await r.json();
+          const items = (d||[]).filter(a=>a.headline&&a.summary).slice(0,2).map(a=>({
+            source: a.source||ticker,
+            headline: a.headline,
+            summary: (a.summary||'').slice(0,200),
+            ticker,
+            type: 'company'
+          }));
+          briefNews.push(...items);
+        } catch(e) {}
+        await sleep(150);
+      }
+
+      // Deduplicate by headline and limit total
+      const seen = new Set();
+      briefNews = briefNews.filter(a => {
+        const key = a.headline.slice(0,60).toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 40);
+
+    } catch(e) { console.warn('News fetch error:', e); }
 
     // Build prompt
-    setBriefStep('Writing your brief…');
-    const portCtx=PORTFOLIO.map(p=>{const px=prices[p.ticker];return px?`${p.name} (${p.ticker}): ${$(px.price)} ${pct(px.changePct)} today`:`${p.name}: no data`;}).join('\n');
-    const alerts=[...PORTFOLIO,...WATCHLIST].map(s=>{const px=prices[s.ticker];if(!px?.high52||!px?.price)return null;const d=(px.price-px.high52)/px.high52*100;return d<=-10?`${s.name} (${s.ticker}): ${pct(d,false)} from 52-wk high`:null;}).filter(Boolean);
-    const mktCtx=Object.entries(mktData).map(([l,d])=>`${l}: ${pct(d.changePct)}`).join(', ');
+    setBriefStep('Writing your brief...');
+    const portCtx = PORTFOLIO.map(p => {
+      const px = prices[p.ticker];
+      return px ? `${p.name} (${p.ticker}): ${$(px.price)} ${pct(px.changePct)} today` : `${p.name}: no data`;
+    }).join('\n');
+    const alerts = [...PORTFOLIO,...WATCHLIST].map(s => {
+      const px = prices[s.ticker];
+      if (!px?.high52||!px?.price) return null;
+      const d = (px.price-px.high52)/px.high52*100;
+      return d<=-10 ? `${s.name} (${s.ticker}): ${pct(d,false)} from 52-wk high` : null;
+    }).filter(Boolean);
+    const mktCtx = Object.entries(mktData).map(([l,d])=>`${l}: ${pct(d.changePct)}`).join(', ');
 
-    const prompt=`You are writing a Morning Brief for a private investor named Angus Charter.
+    // Format news for prompt — include summaries so Gemini has real content
+    const newsCtx = briefNews.map(a =>
+      `[${a.ticker||a.source}] ${a.headline} — ${a.summary}`
+    ).join('\n');
+
+    const prompt = `You are writing a Morning Brief for a private investor named Angus Charter.
 Portfolio: Apple, Amazon, Alphabet, Microsoft, Nvidia, Visa, Meta, Eli Lilly, Stryker, CrowdStrike.
 Watchlist: AMD, Cisco, NuScale Power, Broadcom, TSMC, Booking Holdings, Uber.
-Strategy: long-term quality investor. Buys on macro fear-driven crashes. Growth-first, strong moat required. Buffett-influenced.
+Strategy: long-term quality investor. Buys on macro fear-driven crashes (2008, Covid style). Growth-first, strong moat required. Buffett-influenced.
 
-Market data: ${mktCtx}
-Portfolio today:\n${portCtx}
-${alerts.length?`Watchlist alerts:\n${alerts.join('\n')}`:'No watchlist alerts.'}
-Headlines:\n${briefNews.slice(0,15).join('\n')}
+MARKET DATA: ${mktCtx}
+
+PORTFOLIO PRICES TODAY:
+${portCtx}
+
+${alerts.length ? `WATCHLIST ALERTS:\n${alerts.join('\n')}` : 'No watchlist alerts triggered.'}
+
+NEWS FEED (general market + company specific):
+${newsCtx}
 
 Respond ONLY in valid JSON, no markdown, no backticks:
-{"scorecard":"3-4 sentences. What happened overnight. Key macro driver. One implication for long-term investors. Straight and analytical.","stories":[{"tag":"MACRO","headline":"Short punchy headline","detail":"2 sentences. Specific. What it means.","move":"+2.1% NVDA","positive":true},{"tag":"TECH","headline":"...","detail":"...","move":"...","positive":false},{"tag":"ENERGY","headline":"...","detail":"...","move":"...","positive":true}],"portfolio_pulse":[{"name":"Company","ticker":"TICK","detail":"One sentence. What's relevant today or confirm thesis intact.","move":"+1.2%"},{"name":"...","ticker":"...","detail":"...","move":"..."},{"name":"...","ticker":"...","detail":"...","move":"..."},{"name":"...","ticker":"...","detail":"...","move":"..."}],"call":"One sharp opinionated sentence. Buying environment or watching environment? Direct.","call_action":"HOLD","watcher_level":0,"watcher_text":"No alerts or describe alert concisely."}
-Rules: 3 most interesting stories from headlines. 4 most newsworthy portfolio stocks. call_action: HOLD/WATCH/ADD/AVOID. watcher_level: 0-3. Keep it tight — not text heavy.`;
+{
+  "scorecard": "3-4 sentences. What happened in markets. The key macro driver today. One implication for long-term investors. Straight, analytical, interesting.",
+  "stories": [
+    {"tag":"MACRO","headline":"Short punchy headline","detail":"2 sentences. Specific numbers. What it means for markets.","move":"+2.1%","positive":true},
+    {"tag":"TECH","headline":"...","detail":"...","move":"...","positive":false},
+    {"tag":"ENERGY","headline":"...","detail":"...","move":"...","positive":true}
+  ],
+  "portfolio_pulse": [
+    {"name":"Company name","ticker":"TICK","detail":"One sentence — what is relevant for this stock today from the news, or confirm thesis intact if quiet.","move":"+1.2%"},
+    {"name":"...","ticker":"...","detail":"...","move":"..."},
+    {"name":"...","ticker":"...","detail":"...","move":"..."},
+    {"name":"...","ticker":"...","detail":"...","move":"..."}
+  ],
+  "call": "One sharp opinionated sentence. Is this a buying environment or a watching environment? Be direct.",
+  "call_action": "HOLD",
+  "watcher_level": 0,
+  "watcher_text": "Either confirm no alerts, or describe the alert concisely if something has triggered."
+}
 
-    const res=await fetch(GEMINI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{temperature:0.4,maxOutputTokens:2000}})});
-    const data=await res.json();
-    const raw=data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if(!raw)throw new Error(data?.error?.message||'No response from Gemini');
-    const brief=JSON.parse(raw.replace(/```json|```/g,'').trim());
+Rules:
+- stories: pick the 3 most market-moving stories from the news feed. Use real details from the summaries.
+- portfolio_pulse: pick the 4 most newsworthy of Angus's holdings. Use the company news if available.
+- call_action must be exactly: HOLD, WATCH, ADD, or AVOID
+- watcher_level: 0=nothing, 1=watch, 2=consider, 3=must buy
+- Keep it tight. Every sentence earns its place. Not text heavy.`;
+
+    const res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 2000 }
+      })
+    });
+    const data = await res.json();
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!raw) throw new Error(data?.error?.message || 'No response from Gemini');
+    const brief = JSON.parse(raw.replace(/```json|```/g,'').trim());
     renderBrief(brief);
 
     // Cache
@@ -734,8 +843,9 @@ function showTab(name,el){
 // ═══════════════════════════════════════════════════════
 document.getElementById('brief-date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-// Load prices in background, then auto-generate brief
-init().then(()=>generateBrief());
+// Load prices silently in the background on page load
+// Brief is generated manually when user clicks the button
+init();
 setInterval(init, 5*60*1000);
 </script>
 </body>
