@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morning Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=JetBrains+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:      #0C0B09;
+  --ink-2:    #161410;
+  --ink-3:    #1E1C17;
+  --ink-4:    #252219;
+  --gold:     #BF8E3A;
+  --gold-dim: #7A5A20;
+  --cream:    #EDE7D4;
+  --cream-2:  #A89E88;
+  --cream-3:  #6B6454;
+  --border:   rgba(237,231,212,0.07);
+  --border-2: rgba(237,231,212,0.13);
+  --green:    #4E9968;
+  --green-bg: rgba(78,153,104,0.1);
+  --red:      #C25B5B;
+  --red-bg:   rgba(194,91,91,0.1);
+  --amber:    #C9963A;
+  --amber-bg: rgba(201,150,58,0.08);
+  --serif:    'Cormorant Garamond', Georgia, serif;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Lato', system-ui, sans-serif;
+}
+
+html, body {
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  font-weight: 300;
+}
+
+/* ── PAGE ── */
+.page {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
+
+/* ── HEADER ── */
+.header {
+  border-bottom: 1px solid var(--border-2);
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+}
+.header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.brief-title {
+  font-family: var(--serif);
+  font-size: 42px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: var(--cream);
+  line-height: 1;
+}
+.brief-title em { color: var(--gold); font-style: normal; }
+.header-right { text-align: right; }
+.brief-date {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--cream-3);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.brief-for {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--cream-3);
+  opacity: 0.6;
+}
+.market-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.mpill {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 2px;
+  border: 1px solid var(--border-2);
+  background: var(--ink-2);
+}
+.mpill.pos { color: var(--green); border-color: rgba(78,153,104,0.2); background: var(--green-bg); }
+.mpill.neg { color: var(--red);   border-color: rgba(194,91,91,0.2); background: var(--red-bg); }
+.mpill.neu { color: var(--cream-3); }
+
+/* ── GENERATE BUTTON ── */
+.gen-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  flex-direction: column;
+  gap: 16px;
+}
+.gen-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.gen-btn:hover { background: rgba(191,142,58,0.08); }
+.gen-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--cream-3);
+  letter-spacing: 0.06em;
+}
+
+/* ── LOADING ── */
+.loading-wrap {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+}
+.loading-orb {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-dim);
+  border-top-color: var(--gold);
+  animation: spin 1.2s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--cream-3);
+  text-transform: uppercase;
+  animation: blink 1.6s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:0.3}50%{opacity:0.8} }
+.loading-step {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--cream-3);
+  opacity: 0.4;
+  letter-spacing: 0.06em;
+}
+
+/* ── CONTENT ── */
+.brief-content { display: none; animation: fadeUp 0.6s ease both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
+
+/* ── SECTION ── */
+.section { margin-bottom: 36px; }
+.section-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── SCORECARD ── */
+.scorecard-text {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 300;
+  color: var(--cream);
+  line-height: 1.7;
+}
+.scorecard-text strong {
+  color: var(--gold);
+  font-weight: 400;
+}
+
+/* ── MARKET DATA ROW ── */
+.market-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.mdata {
+  background: var(--ink-2);
+  padding: 12px 14px;
+}
+.mdata-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cream-3);
+  margin-bottom: 5px;
+}
+.mdata-val {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1;
+}
+.mdata-chg {
+  font-family: var(--mono);
+  font-size: 10px;
+  margin-top: 4px;
+}
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.neu { color: var(--cream-3); }
+
+/* ── STORY CARDS ── */
+.story-grid { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--border); border-radius: 2px; overflow: hidden; }
+.story-card {
+  background: var(--ink-2);
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.story-card:last-child { border-bottom: none; }
+.story-num {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--cream-3);
+  opacity: 0.5;
+  padding-top: 3px;
+  flex-shrink: 0;
+  width: 16px;
+}
+.story-body { flex: 1; }
+.story-headline {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--cream);
+  margin-bottom: 4px;
+  line-height: 1.35;
+}
+.story-detail {
+  font-size: 12px;
+  color: var(--cream-2);
+  line-height: 1.6;
+}
+.story-tag {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.story-move {
+  font-family: var(--mono);
+  font-size: 11px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+/* ── PORTFOLIO PULSE ── */
+.pulse-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 2px; overflow: hidden; }
+.pulse-card {
+  background: var(--ink-2);
+  padding: 13px 15px;
+}
+.pulse-name { font-family: var(--serif); font-size: 15px; color: var(--cream); margin-bottom: 2px; }
+.pulse-detail { font-size: 11px; color: var(--cream-2); line-height: 1.5; }
+.pulse-move { font-family: var(--mono); font-size: 11px; margin-top: 4px; font-weight: 500; }
+
+/* ── THE CALL ── */
+.call-card {
+  background: var(--ink-2);
+  border: 1px solid var(--border-2);
+  border-left: 3px solid var(--gold);
+  border-radius: 2px;
+  padding: 20px 22px;
+}
+.call-text {
+  font-family: var(--serif);
+  font-size: 21px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--cream);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+.call-action {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--cream-3);
+}
+.call-action span {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  margin-right: 6px;
+  font-weight: 500;
+}
+.act-watch  { background: rgba(201,162,39,0.1);  color: #C9A227; }
+.act-add    { background: rgba(78,153,104,0.1);   color: var(--green); }
+.act-hold   { background: var(--ink-3);            color: var(--cream-3); }
+.act-avoid  { background: rgba(194,91,91,0.1);    color: var(--red); }
+
+/* ── WATCHER ALERT ── */
+.watcher-alert {
+  border: 1px solid;
+  border-radius: 2px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.wa-1 { background: rgba(201,162,39,0.06); border-color: rgba(201,162,39,0.2); }
+.wa-2 { background: rgba(212,116,42,0.06); border-color: rgba(212,116,42,0.25); }
+.wa-3 { background: rgba(201,64,64,0.07);  border-color: rgba(201,64,64,0.25); }
+.wa-none { background: var(--ink-2); border-color: var(--border); }
+.wa-icon { font-size: 22px; flex-shrink: 0; }
+.wa-body { flex: 1; }
+.wa-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.wat-1 { color: #C9A227; }
+.wat-2 { color: #D4742A; }
+.wat-3 { color: #C94040; }
+.wat-none { color: var(--cream-3); }
+.wa-text { font-size: 13px; color: var(--cream-2); line-height: 1.6; }
+
+/* ── FOOTER ── */
+.brief-footer {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-left {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--cream-3);
+  opacity: 0.4;
+  letter-spacing: 0.06em;
+}
+.footer-right { display: flex; gap: 12px; }
+.footer-link {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--cream-3);
+  text-decoration: none;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+.footer-link:hover { opacity: 1; color: var(--gold); }
+.regen-btn {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 5px 12px;
+  border: 1px solid var(--border-2);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--cream-3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.regen-btn:hover { border-color: var(--gold); color: var(--gold); }
+.error-msg {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--red);
+  background: var(--red-bg);
+  border: 1px solid rgba(194,91,91,0.2);
+  padding: 10px 14px;
+  border-radius: 2px;
+  margin-top: 12px;
+  display: none;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div class="brief-title">Morning <em>Brief</em></div>
+      <div class="header-right">
+        <div class="brief-date" id="brief-date">—</div>
+        <div class="brief-for">Angus Charter</div>
+      </div>
+    </div>
+    <div class="market-pills" id="market-pills"></div>
+  </div>
+
+  <!-- GENERATE STATE -->
+  <div class="gen-wrap" id="gen-wrap">
+    <button class="gen-btn" onclick="generate()">Generate Today's Brief</button>
+    <div class="gen-sub">Pulls live market data · Powered by Gemini · Free</div>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div class="loading-wrap" id="loading-wrap">
+    <div class="loading-orb"></div>
+    <div class="loading-text">Compiling your brief</div>
+    <div class="loading-step" id="loading-step">Fetching market data…</div>
+  </div>
+
+  <!-- BRIEF CONTENT -->
+  <div class="brief-content" id="brief-content">
+
+    <!-- MARKET SCORECARD -->
+    <div class="section">
+      <div class="section-label">Market scorecard</div>
+      <div class="market-row" id="market-row"></div>
+      <div class="scorecard-text" id="scorecard-text"></div>
+    </div>
+
+    <!-- WHAT MOVED -->
+    <div class="section">
+      <div class="section-label">What moved</div>
+      <div class="story-grid" id="story-grid"></div>
+    </div>
+
+    <!-- PORTFOLIO PULSE -->
+    <div class="section">
+      <div class="section-label">Your portfolio — in the news</div>
+      <div class="pulse-grid" id="pulse-grid"></div>
+    </div>
+
+    <!-- THE CALL -->
+    <div class="section">
+      <div class="section-label">The call</div>
+      <div class="call-card">
+        <div class="call-text" id="call-text"></div>
+        <div class="call-action" id="call-action"></div>
+      </div>
+    </div>
+
+    <!-- WATCHER ALERT -->
+    <div class="section" id="watcher-section">
+      <div class="section-label">Watcher alert</div>
+      <div id="watcher-alert-wrap"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="brief-footer">
+      <div class="footer-left">Morning Brief · Not financial advice · <span id="gen-time">—</span></div>
+      <div class="footer-right">
+        <a class="footer-link" href="the-watcher.html">← The Watcher</a>
+        <button class="regen-btn" onclick="generate()">↻ Regenerate</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+const GEMINI_KEY  = 'AIzaSyA9ZLVcdsJ-Jrs9X0Yrjd08eu0mxA33y3g';
+const FINNHUB_KEY = 'd7orkqhr01qmthudab50d7orkqhr01qmthudab5g';
+const GEMINI_URL  = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+
+const PORTFOLIO = [
+  { name:'Apple',       ticker:'AAPL' },
+  { name:'Amazon',      ticker:'AMZN' },
+  { name:'Alphabet',    ticker:'GOOGL' },
+  { name:'Microsoft',   ticker:'MSFT' },
+  { name:'Nvidia',      ticker:'NVDA' },
+  { name:'Visa',        ticker:'V' },
+  { name:'Meta',        ticker:'META' },
+  { name:'Eli Lilly',   ticker:'LLY' },
+  { name:'Stryker',     ticker:'SYK' },
+  { name:'CrowdStrike', ticker:'CRWD' },
+];
+
+const WATCHLIST = [
+  { name:'AMD',              ticker:'AMD'  },
+  { name:'Cisco',            ticker:'CSCO' },
+  { name:'NuScale Power',    ticker:'SMR'  },
+  { name:'Broadcom',         ticker:'AVGO' },
+  { name:'TSMC',             ticker:'TSM'  },
+  { name:'Booking Holdings', ticker:'BKNG' },
+  { name:'Uber',             ticker:'UBER' },
+];
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const fmt$ = n => isNaN(n)||n==null ? '—' : '$'+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const fmtPct = n => isNaN(n)||n==null ? '—' : (n>=0?'+':'')+Number(n).toFixed(2)+'%';
+const cc = n => n>0?'pos':n<0?'neg':'neu';
+const todayStr = () => new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let prices = {};
+let marketData = {};
+let newsHeadlines = [];
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+document.getElementById('brief-date').textContent = todayStr();
+
+// Auto-generate on load
+window.addEventListener('load', () => {
+  // Check if already generated today (cached in localStorage)
+  const cached = localStorage.getItem('morning-brief-cache');
+  if (cached) {
+    try {
+      const { date, html } = JSON.parse(cached);
+      if (date === new Date().toDateString()) {
+        restoreFromCache(html);
+        return;
+      }
+    } catch(e) {}
+  }
+  generate();
+});
+
+// ═══════════════════════════════════════════════
+// MAIN GENERATE
+// ═══════════════════════════════════════════════
+async function generate() {
+  showState('loading');
+  document.getElementById('error-msg').style.display = 'none';
+
+  try {
+    // Step 1 — Fetch market index data
+    setStep('Fetching market data…');
+    await fetchMarketData();
+
+    // Step 2 — Fetch portfolio prices
+    setStep('Fetching your portfolio prices…');
+    await fetchPortfolioPrices();
+
+    // Step 3 — Fetch top headlines
+    setStep('Pulling today\'s market news…');
+    await fetchNews();
+
+    // Step 4 — Generate brief with Gemini
+    setStep('Writing your brief…');
+    await buildBrief();
+
+    // Cache it
+    const html = document.getElementById('brief-content').innerHTML;
+    localStorage.setItem('morning-brief-cache', JSON.stringify({
+      date: new Date().toDateString(), html
+    }));
+
+    showState('content');
+
+  } catch(e) {
+    console.error('Brief generation error:', e);
+    showState('generate');
+    const el = document.getElementById('error-msg');
+    el.textContent = 'Could not generate brief: ' + e.message + '. Check your API keys and try again.';
+    el.style.display = 'block';
+  }
+}
+
+function restoreFromCache(html) {
+  document.getElementById('brief-content').innerHTML = html;
+  document.getElementById('gen-time').textContent = 'Cached · ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  showState('content');
+}
+
+function showState(state) {
+  document.getElementById('gen-wrap').style.display     = state==='generate' ? 'flex'  : 'none';
+  document.getElementById('loading-wrap').style.display = state==='loading'  ? 'flex'  : 'none';
+  document.getElementById('brief-content').style.display= state==='content'  ? 'block' : 'none';
+}
+
+function setStep(msg) {
+  document.getElementById('loading-step').textContent = msg;
+}
+
+// ═══════════════════════════════════════════════
+// FETCH MARKET DATA (Finnhub quotes for indices)
+// ═══════════════════════════════════════════════
+async function fetchMarketData() {
+  // Use ETFs as proxies for indices — always tradeable on Finnhub free tier
+  const indices = [
+    { label:'S&P 500',  ticker:'SPY' },
+    { label:'Nasdaq',   ticker:'QQQ' },
+    { label:'Oil (WTI)',ticker:'USO' },
+    { label:'Gold',     ticker:'GLD' },
+  ];
+
+  for (const idx of indices) {
+    try {
+      const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${idx.ticker}&token=${FINNHUB_KEY}`);
+      const d = await res.json();
+      if (d.c) marketData[idx.label] = { price: d.c, change: d.d, changePct: d.dp };
+      await sleep(150);
+    } catch(e) { console.warn('Market data fail:', idx.ticker); }
+  }
+
+  // Render market pills in header
+  const pills = Object.entries(marketData).map(([label, d]) =>
+    `<span class="mpill ${cc(d.changePct)}">${label} ${fmtPct(d.changePct)}</span>`
+  ).join('');
+  document.getElementById('market-pills').innerHTML = pills;
+}
+
+// ═══════════════════════════════════════════════
+// FETCH PORTFOLIO PRICES
+// ═══════════════════════════════════════════════
+async function fetchPortfolioPrices() {
+  const allTickers = [...PORTFOLIO, ...WATCHLIST];
+  for (const stock of allTickers) {
+    try {
+      const [qRes, mRes] = await Promise.all([
+        fetch(`https://finnhub.io/api/v1/quote?symbol=${stock.ticker}&token=${FINNHUB_KEY}`),
+        fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${stock.ticker}&metric=all&token=${FINNHUB_KEY}`)
+      ]);
+      const q = await qRes.json();
+      const m = await mRes.json();
+      if (q.c) {
+        prices[stock.ticker] = {
+          price: q.c, change: q.d, changePct: q.dp,
+          high52: m?.metric?.['52WeekHigh'] || null
+        };
+      }
+      await sleep(180);
+    } catch(e) { console.warn('Price fail:', stock.ticker); }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// FETCH NEWS HEADLINES
+// ═══════════════════════════════════════════════
+async function fetchNews() {
+  const now  = new Date();
+  const past = new Date(now - 2*24*3600*1000);
+  const fmt  = d => d.toISOString().slice(0,10);
+
+  // Get general market news from Finnhub
+  try {
+    const res = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
+    const data = await res.json();
+    newsHeadlines = (data || [])
+      .filter(a => a.headline)
+      .slice(0, 20)
+      .map(a => a.headline);
+  } catch(e) { console.warn('News fetch failed'); }
+}
+
+// ═══════════════════════════════════════════════
+// BUILD BRIEF WITH GEMINI
+// ═══════════════════════════════════════════════
+async function buildBrief() {
+  // Prepare context for Gemini
+  const portPrices = PORTFOLIO.map(p => {
+    const px = prices[p.ticker];
+    return px ? `${p.name} (${p.ticker}): ${fmt$(px.price)} ${fmtPct(px.changePct)} today` : `${p.name}: no data`;
+  }).join('\n');
+
+  const watchAlerts = [...PORTFOLIO, ...WATCHLIST].map(p => {
+    const px = prices[p.ticker];
+    if (!px?.high52 || !px.price) return null;
+    const drop = (px.price - px.high52) / px.high52 * 100;
+    if (drop <= -10) return `${p.name} (${p.ticker}): ${fmtPct(drop)} from 52-week high`;
+    return null;
+  }).filter(Boolean);
+
+  const mktSummary = Object.entries(marketData)
+    .map(([l,d]) => `${l}: ${fmtPct(d.changePct)}`)
+    .join(', ');
+
+  const headlines = newsHeadlines.slice(0,15).join('\n');
+
+  const prompt = `You are writing a Morning Brief for a private investor named Angus Charter. 
+His portfolio: Apple, Amazon, Alphabet, Microsoft, Nvidia, Visa, Meta, Eli Lilly, Stryker, CrowdStrike.
+His watchlist: AMD, Cisco, NuScale Power, Broadcom, TSMC, Booking Holdings, Uber.
+His strategy: long-term quality investor. Buys on macro fear-driven crashes (like 2008, Covid). Growth-first, strong moat required. Buffett-influenced.
+
+Today's market data:
+${mktSummary}
+
+Portfolio prices today:
+${portPrices}
+
+${watchAlerts.length > 0 ? `Watchlist alerts triggered:\n${watchAlerts.join('\n')}` : 'No watchlist alerts triggered.'}
+
+Recent market headlines:
+${headlines}
+
+Write a Morning Brief in this EXACT JSON format (no markdown, no backticks, valid JSON only):
+{
+  "scorecard": "3-4 sentences. What happened in markets overnight. Straight, analytical, interesting. Mention the key macro driver. Reference specific moves. No fluff. End with one implication for long-term investors.",
+  "stories": [
+    { "tag": "MACRO/TECH/ENERGY/etc", "headline": "Short punchy headline", "detail": "2 sentences of context. Specific. What it means.", "move": "+4.2% NVDA", "positive": true },
+    { "tag": "...", "headline": "...", "detail": "...", "move": "...", "positive": false },
+    { "tag": "...", "headline": "...", "detail": "...", "move": "...", "positive": true }
+  ],
+  "portfolio_pulse": [
+    { "name": "Company name", "ticker": "TICK", "detail": "One sentence on what's relevant for this stock today if anything. If nothing notable, say the thesis remains intact.", "move": "+1.2%" },
+    { "name": "...", "ticker": "...", "detail": "...", "move": "..." },
+    { "name": "...", "ticker": "...", "detail": "...", "move": "..." },
+    { "name": "...", "ticker": "...", "detail": "...", "move": "..." }
+  ],
+  "call": "One sharp, opinionated sentence. What should Angus be thinking about today? Is this a buying environment or a watching environment? Be direct.",
+  "call_action": "HOLD",
+  "watcher_level": 0,
+  "watcher_text": "Either 'No alerts. All watchlist stocks within normal range.' OR describe the alert concisely if something has triggered."
+}
+
+Rules:
+- stories: pick the 3 most interesting/relevant market stories from the headlines. Focus on what moves markets or affects his stocks.
+- portfolio_pulse: pick the 4 most newsworthy of his holdings today. If markets are quiet, still pick 4 and comment on thesis.
+- call_action must be exactly one of: HOLD, WATCH, ADD, AVOID
+- watcher_level: 0=no alert, 1=watch, 2=consider, 3=must buy
+- move field: use actual price data provided above. Format as "+1.2%" or "-3.4%"
+- Keep everything tight. Not text heavy. Every sentence must earn its place.`;
+
+  const res = await fetch(GEMINI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.4, maxOutputTokens: 2000 }
+    })
+  });
+
+  const data = await res.json();
+  const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!raw) throw new Error(data?.error?.message || 'No response from Gemini');
+
+  const clean = raw.replace(/```json|```/g,'').trim();
+  const brief = JSON.parse(clean);
+
+  renderBrief(brief);
+}
+
+// ═══════════════════════════════════════════════
+// RENDER BRIEF
+// ═══════════════════════════════════════════════
+function renderBrief(b) {
+  // Market data row
+  document.getElementById('market-row').innerHTML = Object.entries(marketData).map(([label, d]) => `
+    <div class="mdata">
+      <div class="mdata-label">${label}</div>
+      <div class="mdata-val">${fmt$(d.price)}</div>
+      <div class="mdata-chg ${cc(d.changePct)}">${fmtPct(d.changePct)}</div>
+    </div>`).join('');
+
+  // Scorecard
+  document.getElementById('scorecard-text').innerHTML = b.scorecard
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Stories
+  document.getElementById('story-grid').innerHTML = (b.stories||[]).map((s,i) => `
+    <div class="story-card">
+      <div class="story-num">0${i+1}</div>
+      <div class="story-body">
+        <div class="story-tag">${s.tag||''}</div>
+        <div class="story-headline">${s.headline}</div>
+        <div class="story-detail">${s.detail}</div>
+        ${s.move ? `<div class="story-move ${s.positive?'pos':'neg'}">${s.move}</div>` : ''}
+      </div>
+    </div>`).join('');
+
+  // Portfolio pulse
+  document.getElementById('pulse-grid').innerHTML = (b.portfolio_pulse||[]).map(p => {
+    const px = prices[p.ticker];
+    const move = px ? fmtPct(px.changePct) : p.move;
+    const isPos = move && !move.startsWith('-');
+    return `<div class="pulse-card">
+      <div class="pulse-name">${p.name}</div>
+      <div class="pulse-detail">${p.detail}</div>
+      <div class="pulse-move ${isPos?'pos':'neg'}">${move||'—'}</div>
+    </div>`;
+  }).join('');
+
+  // The call
+  document.getElementById('call-text').textContent = b.call;
+  const actionLabels = { HOLD:'Hold your positions', WATCH:'Watch closely', ADD:'Consider adding', AVOID:'Avoid new positions' };
+  const actionCls    = { HOLD:'act-hold', WATCH:'act-watch', ADD:'act-add', AVOID:'act-avoid' };
+  document.getElementById('call-action').innerHTML =
+    `<span class="${actionCls[b.call_action]||'act-hold'}">${b.call_action}</span>${actionLabels[b.call_action]||''}`;
+
+  // Watcher alert
+  const icons  = { 0:'🛡️', 1:'👀', 2:'⚠️', 3:'🚨' };
+  const labels = { 0:'All clear', 1:'Level 1 — Watch', 2:'Level 2 — Consider', 3:'Level 3 — Must Buy' };
+  const clsMap = { 0:'wa-none', 1:'wa-1', 2:'wa-2', 3:'wa-3' };
+  const lblCls = { 0:'wat-none', 1:'wat-1', 2:'wat-2', 3:'wat-3' };
+  const lv = b.watcher_level || 0;
+  document.getElementById('watcher-alert-wrap').innerHTML = `
+    <div class="watcher-alert ${clsMap[lv]}">
+      <div class="wa-icon">${icons[lv]}</div>
+      <div class="wa-body">
+        <div class="wa-title ${lblCls[lv]}">${labels[lv]}</div>
+        <div class="wa-text">${b.watcher_text}</div>
+      </div>
+    </div>`;
+
+  // Footer timestamp
+  document.getElementById('gen-time').textContent =
+    'Generated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+</script>
+</body>
+</html>
