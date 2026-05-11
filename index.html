@@ -350,34 +350,40 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 </div>
 
 <script>
-// Clear any old cached auth so password change takes effect
-const CURRENT_PW_VERSION = 'v2';
-if (sessionStorage.getItem('watcher-pw-version') !== CURRENT_PW_VERSION) {
-  sessionStorage.removeItem('watcher-auth');
-  sessionStorage.setItem('watcher-pw-version', CURRENT_PW_VERSION);
-}
+(function() {
+  // Bump this version any time you change the password to force re-auth
+  var PW = '05061996';
+  var VER = 'v3';
 
-// Check if already authenticated this session
-if (sessionStorage.getItem('watcher-auth') === 'true') {
-  document.getElementById('gate').style.display = 'none';
-}
+  // Clear old session if version changed
+  try {
+    if (sessionStorage.getItem('tw-ver') !== VER) {
+      sessionStorage.clear();
+      sessionStorage.setItem('tw-ver', VER);
+    }
+    // Already authenticated
+    if (sessionStorage.getItem('tw-auth') === '1') {
+      document.getElementById('gate').style.display = 'none';
+    }
+  } catch(e) {}
 
-function checkPassword() {
-  const input = document.getElementById('gate-input').value;
-  if (input === '05061996') {
-    sessionStorage.setItem('watcher-auth', 'true');
-    const gate = document.getElementById('gate');
-    gate.style.opacity = '0';
-    gate.style.transition = 'opacity 0.4s ease';
-    setTimeout(() => gate.style.display = 'none', 400);
-  } else {
-    const err = document.getElementById('gate-error');
-    err.classList.add('show');
-    document.getElementById('gate-input').value = '';
-    document.getElementById('gate-input').focus();
-    setTimeout(() => err.classList.remove('show'), 2000);
-  }
-}
+  window.checkPassword = function() {
+    var val = document.getElementById('gate-input').value;
+    if (val === PW) {
+      try { sessionStorage.setItem('tw-auth', '1'); } catch(e) {}
+      var g = document.getElementById('gate');
+      g.style.transition = 'opacity 0.35s ease';
+      g.style.opacity = '0';
+      setTimeout(function(){ g.style.display = 'none'; }, 380);
+    } else {
+      var err = document.getElementById('gate-error');
+      err.classList.add('show');
+      document.getElementById('gate-input').value = '';
+      document.getElementById('gate-input').focus();
+      setTimeout(function(){ err.classList.remove('show'); }, 2000);
+    }
+  };
+})();
 </script>
 <div class="topbar">
   <div>
