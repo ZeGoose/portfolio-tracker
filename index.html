@@ -83,6 +83,7 @@
 }
 .gate-error.show { display: block; }
 </style>
+<style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -349,6 +350,13 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 </div>
 
 <script>
+// Clear any old cached auth so password change takes effect
+const CURRENT_PW_VERSION = 'v2';
+if (sessionStorage.getItem('watcher-pw-version') !== CURRENT_PW_VERSION) {
+  sessionStorage.removeItem('watcher-auth');
+  sessionStorage.setItem('watcher-pw-version', CURRENT_PW_VERSION);
+}
+
 // Check if already authenticated this session
 if (sessionStorage.getItem('watcher-auth') === 'true') {
   document.getElementById('gate').style.display = 'none';
