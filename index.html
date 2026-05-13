@@ -147,7 +147,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .sh-note { font-family:var(--mono); font-size:9px; color:var(--cream-3); opacity:0.5; }
 
 /* ── MORNING BRIEF PANEL ── */
-#panel-brief { padding:0; }
+
 .brief-page { max-width:720px; margin:0 auto; padding:36px 32px 80px; }
 .brief-header { border-bottom:1px solid var(--border-2); padding-bottom:22px; margin-bottom:30px; }
 .brief-header-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
@@ -308,30 +308,132 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .wl-price { font-family:var(--mono); font-size:13px; color:var(--cream); }
 .wl-drop { font-family:var(--mono); font-size:10px; margin-top:2px; }
 
+/* ── MARKET PULSE STRIP ── */
+.pulse-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:20px; animation:up 0.3s ease both; }
+.ps-item { background:var(--ink-2); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; }
+.ps-label { font-family:var(--mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--cream-3); }
+.ps-right { text-align:right; }
+.ps-val { font-family:var(--serif); font-size:18px; color:var(--cream); line-height:1; }
+.ps-chg { font-family:var(--mono); font-size:10px; margin-top:2px; }
+
+/* ── WHY MOVING EXPLAINER ── */
+.why-card { margin-top:6px; display:flex; gap:8px; align-items:flex-start; padding:8px 12px; border-radius:2px; border:1px solid var(--border); background:var(--ink-3); }
+.why-dot { width:5px; height:5px; border-radius:50%; background:var(--gold-dim); flex-shrink:0; margin-top:4px; }
+.why-text { font-size:11px; color:var(--cream-2); line-height:1.55; }
+.why-loading { font-family:var(--mono); font-size:10px; color:var(--cream-3); animation:blink 1.4s ease infinite; }
+
 /* ── NEWS PANEL ── */
 #panel-news { padding:28px 32px 60px; }
-.news-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+.news-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; }
 .nf-btn { font-family:var(--mono); font-size:9px; letter-spacing:0.08em; padding:4px 11px; border-radius:20px; border:1px solid var(--border-2); background:transparent; color:var(--cream-3); cursor:pointer; transition:all 0.15s; }
 .nf-btn:hover { color:var(--cream-2); }
 .nf-btn.active { background:var(--gold-dim); color:var(--cream); border-color:transparent; }
-.news-grid { display:flex; flex-direction:column; gap:10px; animation:up 0.4s ease both; }
-.news-card { background:var(--ink-2); border:1px solid var(--border); border-radius:3px; overflow:hidden; transition:border-color 0.2s; }
-.news-card:hover { border-color:var(--border-2); }
-.news-inner { padding:16px 18px; }
-.news-meta { display:flex; align-items:center; gap:8px; margin-bottom:9px; }
-.news-tag { font-family:var(--mono); font-size:8px; letter-spacing:0.1em; background:var(--ink-4); color:var(--gold); padding:2px 7px; border-radius:2px; border:1px solid var(--border-2); text-transform:uppercase; }
+.cat-filters { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+.cat-btn { font-family:var(--mono); font-size:9px; letter-spacing:0.06em; padding:4px 11px; border-radius:20px; border:1px solid var(--border-2); background:transparent; color:var(--cream-3); cursor:pointer; transition:all 0.15s; }
+.cat-btn:hover { color:var(--cream-2); }
+.cat-btn.active { background:var(--ink-3); color:var(--cream); border-color:var(--border-2); }
+
+/* FEATURED STORY */
+.news-featured { background:var(--ink-2); border:1px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:12px; cursor:pointer; transition:border-color 0.2s; text-decoration:none; display:block; }
+.news-featured:hover { border-color:var(--border-2); }
+.news-featured-inner { padding:20px 22px; }
+.news-featured-meta { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.news-featured-tag { font-family:var(--mono); font-size:8px; letter-spacing:0.1em; background:var(--gold-dim); color:var(--cream); padding:2px 8px; border-radius:2px; text-transform:uppercase; }
+.news-featured-source { font-family:var(--mono); font-size:10px; color:var(--cream-3); }
+.news-featured-age { font-family:var(--mono); font-size:10px; color:var(--cream-3); margin-left:auto; }
+.news-featured-headline { font-family:var(--serif); font-size:24px; font-weight:400; color:var(--cream); line-height:1.35; margin-bottom:10px; }
+.news-featured-summary { font-size:13px; color:var(--cream-2); line-height:1.75; margin-bottom:14px; }
+.news-featured-footer { display:flex; align-items:center; justify-content:space-between; }
+.news-featured-sent { font-family:var(--mono); font-size:9px; padding:3px 9px; border-radius:2px; }
+.news-read-btn { font-family:var(--mono); font-size:9px; letter-spacing:0.08em; color:var(--gold); }
+
+/* NEWS GRID */
+.news-list { display:flex; flex-direction:column; gap:2px; }
+.news-card { background:var(--ink-2); border:1px solid transparent; border-radius:3px; overflow:hidden; transition:all 0.15s; display:block; text-decoration:none; cursor:pointer; border-left:3px solid transparent; }
+.news-card:hover { background:var(--ink-3); border-color:var(--border); }
+.news-card.sent-pos-card { border-left-color:rgba(78,153,104,0.5); }
+.news-card.sent-neg-card { border-left-color:rgba(194,91,91,0.5); }
+.news-card.sent-neu-card { border-left-color:var(--border); }
+.news-card.portfolio-story { border-left-color:var(--gold-dim); }
+.news-inner { padding:13px 16px; display:flex; gap:14px; align-items:flex-start; }
+.news-img { width:72px; height:52px; border-radius:2px; object-fit:cover; flex-shrink:0; background:var(--ink-3); }
+.news-img-placeholder { width:72px; height:52px; border-radius:2px; flex-shrink:0; background:var(--ink-4); display:flex; align-items:center; justify-content:center; }
+.news-img-placeholder span { font-family:var(--serif); font-size:18px; color:var(--cream-3); font-style:italic; }
+.news-content { flex:1; min-width:0; }
+.news-meta { display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+.news-tag { font-family:var(--mono); font-size:8px; letter-spacing:0.08em; background:var(--ink-4); color:var(--gold); padding:2px 6px; border-radius:2px; border:1px solid var(--border-2); text-transform:uppercase; }
+.news-portfolio-dot { width:5px; height:5px; border-radius:50%; background:var(--gold); flex-shrink:0; title:'Your portfolio'; }
 .news-source { font-family:var(--mono); font-size:10px; color:var(--cream-3); }
 .news-age { font-family:var(--mono); font-size:10px; color:var(--cream-3); margin-left:auto; }
-.news-headline { font-family:var(--serif); font-size:17px; color:var(--cream); margin-bottom:7px; line-height:1.4; }
-.news-summary { font-size:12px; color:var(--cream-2); line-height:1.75; margin-bottom:11px; }
-.news-footer { display:flex; align-items:center; justify-content:space-between; }
-.news-sent { font-family:var(--mono); font-size:9px; letter-spacing:0.06em; padding:3px 8px; border-radius:2px; }
-.sent-pos{background:var(--green-bg);color:var(--green);}
-.sent-neg{background:var(--red-bg);color:var(--red);}
-.sent-neu{background:var(--ink-4);color:var(--cream-3);}
-.news-read { font-family:var(--mono); font-size:9px; letter-spacing:0.08em; padding:4px 11px; border:1px solid var(--border-2); border-radius:2px; background:transparent; color:var(--cream-3); text-decoration:none; transition:all 0.15s; }
-.news-read:hover { border-color:var(--gold); color:var(--gold); }
+.news-headline { font-family:var(--serif); font-size:15px; color:var(--cream); line-height:1.35; margin-bottom:4px; }
+.news-summary { font-size:12px; color:var(--cream-2); line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.news-sent { font-family:var(--mono); font-size:9px; letter-spacing:0.06em; padding:2px 7px; border-radius:2px; margin-top:6px; display:inline-block; }
+.sent-pos { background:var(--green-bg); color:var(--green); }
+.sent-neg { background:var(--red-bg); color:var(--red); }
+.sent-neu { background:var(--ink-4); color:var(--cream-3); }
 .news-loading { font-family:var(--mono); font-size:11px; color:var(--cream-3); padding:60px; text-align:center; animation:blink 1.4s ease infinite; }
+.news-section-label { font-family:var(--mono); font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--cream-3); margin:16px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+
+/* ── EARNINGS PANEL ── */
+#panel-earnings { padding:28px 32px 60px; }
+.earnings-intro { font-family:var(--mono); font-size:10px; color:var(--cream-3); margin-bottom:24px; letter-spacing:0.04em; }
+.earnings-calendar { display:flex; flex-direction:column; gap:1px; }
+.cal-month { margin-bottom:24px; }
+.cal-month-title { font-family:var(--mono); font-size:9px; letter-spacing:0.18em; text-transform:uppercase; color:var(--cream-3); margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:3px; overflow:hidden; }
+.cal-day-header { background:var(--ink-3); padding:6px 4px; text-align:center; font-family:var(--mono); font-size:8px; letter-spacing:0.1em; text-transform:uppercase; color:var(--cream-3); }
+.cal-day { background:var(--ink-2); padding:8px 6px; min-height:64px; vertical-align:top; position:relative; }
+.cal-day.empty { background:var(--ink); opacity:0.4; }
+.cal-day.today { background:var(--ink-3); }
+.cal-day.today .cal-day-num { color:var(--gold); }
+.cal-day-num { font-family:var(--mono); font-size:10px; color:var(--cream-3); margin-bottom:5px; }
+.cal-earnings { display:flex; flex-wrap:wrap; gap:3px; }
+.cal-ticker {
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:500;
+  padding:2px 5px;
+  border-radius:2px;
+  cursor:default;
+  position:relative;
+  letter-spacing:0.04em;
+  transition:all 0.15s;
+}
+.cal-ticker.bmo { background:var(--green-bg); color:var(--green); border:1px solid rgba(78,153,104,0.2); }
+.cal-ticker.amc { background:var(--l2-bg); color:var(--l2-color); border:1px solid var(--l2-border); }
+.cal-ticker.tbc { background:var(--ink-4); color:var(--cream-3); border:1px solid var(--border-2); }
+.cal-ticker:hover { z-index:10; transform:scale(1.05); }
+.cal-ticker .tooltip {
+  display:none;
+  position:absolute;
+  bottom:calc(100% + 6px);
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--ink-4);
+  border:1px solid var(--border-2);
+  border-radius:3px;
+  padding:5px 9px;
+  white-space:nowrap;
+  font-size:10px;
+  color:var(--cream);
+  letter-spacing:0.02em;
+  pointer-events:none;
+  box-shadow:0 4px 12px rgba(0,0,0,0.4);
+}
+.cal-ticker .tooltip::after {
+  content:'';
+  position:absolute;
+  top:100%;
+  left:50%;
+  transform:translateX(-50%);
+  border:4px solid transparent;
+  border-top-color:var(--border-2);
+}
+.cal-ticker:hover .tooltip { display:block; }
+.cal-legend { display:flex; gap:14px; margin-top:12px; }
+.cal-leg { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:9px; color:var(--cream-3); }
+.cal-leg-dot { width:8px; height:8px; border-radius:1px; }
+.earnings-empty { font-family:var(--mono); font-size:11px; color:var(--cream-3); padding:60px; text-align:center; animation:blink 1.4s ease infinite; }
 </style>
 </head>
 <body>
@@ -404,80 +506,21 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
   <div class="tab active" onclick="showTab('portfolio',this)">Portfolio</div>
   <div class="tab" onclick="showTab('alerts',this)">Alerts</div>
   <div class="tab" onclick="showTab('news',this)">News</div>
-  <div class="tab" onclick="showTab('brief',this)">Morning Brief</div>
+  <div class="tab" onclick="showTab('earnings',this)">Earnings</div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!-- MORNING BRIEF PANEL                           -->
-<!-- ══════════════════════════════════════════════ -->
-<div class="panel" id="panel-brief">
-  <div class="brief-page">
-
-    <div class="brief-header">
-      <div class="brief-header-top">
-        <div class="brief-title">Morning <em>Brief</em></div>
-        <div style="text-align:right">
-          <div class="brief-date" id="brief-date">—</div>
-          <div class="brief-for">Angus Charter</div>
-        </div>
-      </div>
-      <div class="mkt-pills" id="mkt-pills"></div>
-    </div>
-
-    <!-- Generate state -->
-    <div class="brief-gen-wrap" id="brief-gen">
-      <button class="brief-gen-btn" onclick="generateBrief()">Generate Today's Brief</button>
-      <div class="brief-gen-sub">Live market data · Gemini AI · Free</div>
-      <div class="brief-error" id="brief-error"></div>
-    </div>
-
-    <!-- Loading state -->
-    <div class="brief-loading" id="brief-loading">
-      <div class="loading-orb"></div>
-      <div class="loading-txt">Compiling your brief</div>
-      <div class="loading-step" id="brief-step">Fetching market data…</div>
-    </div>
-
-    <!-- Content -->
-    <div class="brief-body" id="brief-body">
-      <div class="bsec">
-        <div class="bsec-label">Market scorecard</div>
-        <div class="mkt-row" id="b-mkt-row"></div>
-        <div class="scorecard-txt" id="b-scorecard"></div>
-      </div>
-      <div class="bsec">
-        <div class="bsec-label">What moved</div>
-        <div class="story-list" id="b-stories"></div>
-      </div>
-      <div class="bsec">
-        <div class="bsec-label">Your portfolio — in the news</div>
-        <div class="pulse-grid" id="b-pulse"></div>
-      </div>
-      <div class="bsec">
-        <div class="bsec-label">The call</div>
-        <div class="call-card">
-          <div class="call-txt" id="b-call"></div>
-          <div class="call-action" id="b-action"></div>
-        </div>
-      </div>
-      <div class="bsec">
-        <div class="bsec-label">Watcher alert</div>
-        <div id="b-watcher"></div>
-      </div>
-      <div class="brief-footer">
-        <div class="brief-footer-left">Morning Brief · Not financial advice · <span id="b-gentime">—</span></div>
-        <button class="regen-btn" onclick="generateBrief(true)">↻ Regenerate</button>
-      </div>
-    </div>
-
-  </div>
-</div>
 
 <!-- ══════════════════════════════════════════════ -->
 <!-- PORTFOLIO PANEL                               -->
 <!-- ══════════════════════════════════════════════ -->
 <div class="panel active" id="panel-portfolio">
   <div class="status" id="status"></div>
+  <!-- MARKET PULSE STRIP -->
+  <div class="pulse-strip" id="pulse-strip">
+    <div class="ps-item"><div class="ps-label">USD / ZAR</div><div class="ps-right"><div class="ps-val" id="ps-zar">—</div><div class="ps-chg neu" id="ps-zar-chg">—</div></div></div>
+    <div class="ps-item"><div class="ps-label">S&P 500</div><div class="ps-right"><div class="ps-val" id="ps-spy">—</div><div class="ps-chg neu" id="ps-spy-chg">—</div></div></div>
+    <div class="ps-item"><div class="ps-label">Nasdaq</div><div class="ps-right"><div class="ps-val" id="ps-qqq">—</div><div class="ps-chg neu" id="ps-qqq-chg">—</div></div></div>
+  </div>
   <div class="metrics">
     <div class="metric"><div class="metric-label">Total invested</div><div class="metric-val" id="m-cost">—</div><div class="metric-sub neu" id="m-pos">—</div></div>
     <div class="metric"><div class="metric-label">Current value</div><div class="metric-val" id="m-val">—</div><div class="metric-sub" id="m-val-sub">—</div></div>
@@ -531,9 +574,21 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 <!-- NEWS PANEL                                    -->
 <!-- ══════════════════════════════════════════════ -->
 <div class="panel" id="panel-news">
-  <div class="sh" style="margin-bottom:16px"><div class="sh-title">News relevant to your holdings</div><div class="sh-note">Finnhub · last 7 days</div></div>
+  <div class="sh" style="margin-bottom:12px"><div class="sh-title">Market news</div><div class="sh-note">Finnhub · last 7 days</div></div>
+  <!-- Ticker filter -->
   <div class="news-filter" id="news-filter"></div>
+  <!-- Category filter -->
+  <div class="cat-filters" id="cat-filters"></div>
   <div id="news-container"><div class="news-loading">Loading news…</div></div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- EARNINGS PANEL                                -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="panel" id="panel-earnings">
+  <div class="sh" style="margin-bottom:6px"><div class="sh-title">Earnings calendar</div><div class="sh-note">Your holdings · next 90 days</div></div>
+  <div class="earnings-intro">Hover any ticker to see the company name. Green = before market open · Orange = after market close.</div>
+  <div id="earnings-container"><div class="earnings-empty">Loading earnings calendar…</div></div>
 </div>
 
 <script>
@@ -578,8 +633,6 @@ const WATCHLIST = [
 // ═══════════════════════════════════════════════════════
 let prices     = {};
 let mktData    = {};
-let newsCache  = [];
-let newsFilter = 'ALL';
 const sleep    = ms => new Promise(r => setTimeout(r, ms));
 
 // ═══════════════════════════════════════════════════════
@@ -711,273 +764,405 @@ function renderAlerts(){
   const all=[...PORTFOLIO.map(p=>({...p,inPort:true})),...WATCHLIST.map(w=>({...w,inPort:false}))];
   const triggered=all.map(s=>({...s,lv:alertLevel(s.ticker),drop:drawdown(s.ticker)})).filter(s=>s.lv!=null).sort((a,b)=>b.lv-a.lv||a.drop-b.drop);
   const icons={1:'👀',2:'⚠️',3:'🚨'}, labels={1:'Watch',2:'Consider',3:'Must Buy'};
-  document.getElementById('alert-cards').innerHTML=triggered.length===0?`<div class="no-alerts"><div class="no-alerts-icon">🛡️</div><div class="no-alerts-title">No alerts triggered</div><div class="no-alerts-sub">All stocks within normal range · The Watcher is watching</div></div>`:triggered.map(s=>{const px=prices[s.ticker];return`<div class="alert-card alert-card-${s.lv}"><div class="alert-icon">${icons[s.lv]}</div><div class="alert-body"><div class="alert-name">${s.name} <span style="font-family:var(--mono);font-size:10px;opacity:0.5">${s.ticker}</span></div><div class="alert-detail">${labels[s.lv]} · ${s.inPort?'Portfolio — consider adding':'Watchlist — potential entry'} · Current: ${$(px?.price)} · 52-wk high: ${$(px?.high52)}</div></div><div class="alert-right"><div class="alert-pct pct-${s.lv}">${pct(s.drop)}</div><div class="alert-from">from 52-wk high</div></div></div>`;}).join('');
+  document.getElementById('alert-cards').innerHTML=triggered.length===0?`<div class="no-alerts"><div class="no-alerts-icon">🛡️</div><div class="no-alerts-title">No alerts triggered</div><div class="no-alerts-sub">All stocks within normal range · The Watcher is watching</div></div>`:triggered.map(s=>{const px=prices[s.ticker];return`<div class="alert-card alert-card-${s.lv}"><div class="alert-icon">${icons[s.lv]}</div><div class="alert-body"><div class="alert-name">${s.name} <span style="font-family:var(--mono);font-size:10px;opacity:0.5">${s.ticker}</span></div><div class="alert-detail">${labels[s.lv]} · ${s.inPort?'Portfolio — consider adding':'Watchlist — potential entry'} · Current: ${$(px?.price)} · 52-wk high: ${$(px?.high52)}</div><div class="why-card"><div class="why-dot"></div><div class="why-text why-loading" id="why-${s.ticker}">Analysing why it is moving…</div></div></div><div class="alert-right"><div class="alert-pct pct-${s.lv}">${pct(s.drop)}</div><div class="alert-from">from 52-wk high</div></div></div>`;}).join('');
+
+  // Fetch "why is it moving" for each triggered alert
+  triggered.forEach(async s => {
+    const el = document.getElementById('why-' + s.ticker);
+    if (!el) return;
+    const reason = await fetchWhyMoving(s.ticker, s.name, s.drop);
+    el.textContent = reason;
+    el.classList.remove('why-loading');
+  });
   document.getElementById('wl-grid').innerHTML=all.map(s=>{const px=prices[s.ticker],lv=alertLevel(s.ticker),drop=drawdown(s.ticker);return`<div class="wl-card ${lv?'t'+lv:''}"><div class="wl-name">${s.name}</div><div class="wl-ticker">${s.ticker}${s.inPort?' · portfolio':' · watchlist'}</div><div class="wl-price">${px?$(px.price):'<span class="loading-val">—</span>'}</div><div class="wl-drop ${drop!=null?cc(drop):'neu'}">${drop!=null?pct(drop)+' from high':'—'}</div></div>`;}).join('');
 }
 
 // ═══════════════════════════════════════════════════════
 // NEWS
 // ═══════════════════════════════════════════════════════
-async function loadNews(){
-  if(newsCache.length){renderNews();return;}
-  document.getElementById('news-container').innerHTML='<div class="news-loading">Fetching news…</div>';
-  const now=new Date(), week=new Date(now-7*24*3600*1000), fmt=d=>d.toISOString().slice(0,10);
-  const results=await Promise.allSettled(PORTFOLIO.map(p=>fetch(`https://finnhub.io/api/v1/company-news?symbol=${p.ticker}&from=${fmt(week)}&to=${fmt(now)}&token=${FINNHUB_KEY}`).then(r=>r.json()).then(a=>a.slice(0,5).map(x=>({...x,ticker:p.ticker,coName:p.name})))));
-  newsCache=results.flatMap(r=>r.status==='fulfilled'?r.value:[]).filter(a=>a.headline&&a.datetime).sort((a,b)=>b.datetime-a.datetime).slice(0,60);
-  buildNewsFilter(); renderNews();
+let newsCache  = [];
+let newsFilter = 'ALL';
+let newsCat    = 'ALL';
+
+const PORTFOLIO_TICKERS = new Set(PORTFOLIO.map(p => p.ticker));
+
+const CAT_KEYWORDS = {
+  'Earnings': ['earnings','results','revenue','profit','eps','beat','miss','guidance','quarterly','q1','q2','q3','q4'],
+  'Macro':    ['fed','interest rate','inflation','gdp','recession','economy','treasury','bond','yield','tariff','trade'],
+  'Tech':     ['ai','artificial intelligence','cloud','semiconductor','chip','software','data center','nvidia','microsoft','apple','google','meta','amazon'],
+  'Energy':   ['oil','gas','energy','nuclear','renewable','power','opec','crude'],
+  'Geo':      ['war','iran','china','russia','ukraine','sanctions','geopolitical','trump','xi'],
+};
+
+function detectCategory(headline, summary) {
+  const text = (headline + ' ' + (summary||'')).toLowerCase();
+  for (const [cat, words] of Object.entries(CAT_KEYWORDS)) {
+    if (words.some(w => text.includes(w))) return cat;
+  }
+  return 'Market';
 }
-function buildNewsFilter(){
-  document.getElementById('news-filter').innerHTML=['ALL',...PORTFOLIO.map(p=>p.ticker)].map(t=>`<button class="nf-btn ${t===newsFilter?'active':''}" onclick="filterNews('${t}')">${t==='ALL'?'All news':t}</button>`).join('');
+
+function isPortfolioStory(headline, summary, ticker) {
+  if (ticker && PORTFOLIO_TICKERS.has(ticker)) return true;
+  const text = (headline + ' ' + (summary||'')).toLowerCase();
+  return PORTFOLIO.some(p => text.includes(p.name.toLowerCase()) || text.includes(p.ticker.toLowerCase()));
 }
-function filterNews(t){newsFilter=t;buildNewsFilter();renderNews();}
-function renderNews(){
-  const list=newsFilter==='ALL'?newsCache:newsCache.filter(a=>a.ticker===newsFilter);
-  if(!list.length){document.getElementById('news-container').innerHTML='<div class="news-loading">No news found.</div>';return;}
-  document.getElementById('news-container').innerHTML=`<div class="news-grid">${list.map(a=>{
-    const summary=(a.summary||'').trim().slice(0,260)+((a.summary||'').length>260?'…':'');
-    const age=timeAgo(a.datetime), safeUrl=(a.url||'').replace(/'/g,'%27');
-    const hl=(a.headline||'').toLowerCase();
-    const pos=['beat','surges','gains','record','rises','strong','growth','launches'].some(w=>hl.includes(w));
-    const neg=['miss','falls','drops','cut','loss','weak','warning','declines'].some(w=>hl.includes(w));
-    return`<div class="news-card"><div class="news-inner"><div class="news-meta"><span class="news-tag">${a.ticker}</span><span class="news-source">${a.source||''}</span><span class="news-age">${age}</span></div><div class="news-headline">${a.headline}</div>${summary?`<div class="news-summary">${summary}</div>`:''}<div class="news-footer"><span class="news-sent ${pos?'sent-pos':neg?'sent-neg':'sent-neu'}">${pos?'Positive':neg?'Negative':'Neutral'}</span>${safeUrl?`<a class="news-read" href="${safeUrl}" target="_blank" rel="noopener">Read article →</a>`:''}</div></div></div>`;
-  }).join('')}</div>`;
+
+function sentimentOf(headline) {
+  const hl = (headline||'').toLowerCase();
+  const pos = ['beat','surges','gains','record','rises','strong','growth','launches','profit','upgrade','buy'];
+  const neg = ['miss','falls','drops','cut','loss','weak','warning','declines','downgrade','sell','crash','concern'];
+  if (pos.some(w => hl.includes(w))) return 'pos';
+  if (neg.some(w => hl.includes(w))) return 'neg';
+  return 'neu';
+}
+
+async function loadNews() {
+  if (newsCache.length) { renderNews(); return; }
+  document.getElementById('news-container').innerHTML = '<div class="news-loading">Fetching news…</div>';
+
+  const now = new Date(), week = new Date(now - 7*24*3600*1000);
+  const fmt = d => d.toISOString().slice(0,10);
+
+  // General market news
+  try {
+    const r = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
+    const d = await r.json();
+    const items = (d||[]).filter(a=>a.headline).slice(0,30).map(a => ({
+      ticker: null, source: a.source||'Market', headline: a.headline,
+      summary: (a.summary||'').trim(), datetime: a.datetime, url: a.url||'',
+      image: a.image||null
+    }));
+    newsCache.push(...items);
+  } catch(e) {}
+  await sleep(200);
+
+  // Company-specific news for portfolio
+  for (const p of PORTFOLIO) {
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${p.ticker}&from=${fmt(week)}&to=${fmt(now)}&token=${FINNHUB_KEY}`);
+      const d = await r.json();
+      const items = (d||[]).filter(a=>a.headline).slice(0,3).map(a => ({
+        ticker: p.ticker, source: a.source||p.ticker, headline: a.headline,
+        summary: (a.summary||'').trim(), datetime: a.datetime, url: a.url||'',
+        image: a.image||null
+      }));
+      newsCache.push(...items);
+    } catch(e) {}
+    await sleep(150);
+  }
+
+  // Deduplicate and sort
+  const seen = new Set();
+  newsCache = newsCache.filter(a => {
+    const k = a.headline.slice(0,50).toLowerCase();
+    if (seen.has(k)) return false;
+    seen.add(k); return true;
+  }).sort((a,b) => b.datetime - a.datetime).slice(0,80);
+
+  // Enrich with category and sentiment
+  newsCache = newsCache.map(a => ({
+    ...a,
+    category: detectCategory(a.headline, a.summary),
+    sentiment: sentimentOf(a.headline),
+    isPortfolio: isPortfolioStory(a.headline, a.summary, a.ticker)
+  }));
+
+  buildNewsFilters();
+  renderNews();
+}
+
+function buildNewsFilters() {
+  // Ticker filter
+  document.getElementById('news-filter').innerHTML =
+    ['ALL', ...PORTFOLIO.map(p => p.ticker)].map(t =>
+      `<button class="nf-btn ${t===newsFilter?'active':''}" onclick="filterNews('${t}')">${t==='ALL'?'All tickers':t}</button>`
+    ).join('');
+
+  // Category filter
+  const cats = ['ALL', 'Earnings', 'Macro', 'Tech', 'Energy', 'Geo', 'Market'];
+  document.getElementById('cat-filters').innerHTML =
+    cats.map(c =>
+      `<button class="cat-btn ${c===newsCat?'active':''}" onclick="filterCat('${c}')">${c==='ALL'?'All topics':c}</button>`
+    ).join('');
+}
+
+function filterNews(t) { newsFilter = t; buildNewsFilters(); renderNews(); }
+function filterCat(c)  { newsCat = c;    buildNewsFilters(); renderNews(); }
+
+function renderNews() {
+  let list = newsCache;
+  if (newsFilter !== 'ALL') list = list.filter(a => a.ticker === newsFilter || isPortfolioStory(a.headline, a.summary, a.ticker) && a.ticker === newsFilter);
+  if (newsCat !== 'ALL') list = list.filter(a => a.category === newsCat);
+  if (!list.length) {
+    document.getElementById('news-container').innerHTML = '<div class="news-loading">No stories match this filter.</div>';
+    return;
+  }
+
+  const featured = list[0];
+  const rest = list.slice(1);
+  const portStories = rest.filter(a => a.isPortfolio);
+  const otherStories = rest.filter(a => !a.isPortfolio);
+
+  const sentLabels = { pos:'Positive signal', neg:'Negative signal', neu:'Neutral' };
+  const sentCls    = { pos:'sent-pos', neg:'sent-neg', neu:'sent-neu' };
+
+  // Featured card
+  const featuredHtml = `
+    <a class="news-featured" href="${featured.url}" target="_blank" rel="noopener">
+      <div class="news-featured-inner">
+        <div class="news-featured-meta">
+          <span class="news-featured-tag">${featured.category}</span>
+          ${featured.isPortfolio ? '<span class="news-portfolio-dot" title="Relates to your portfolio"></span>' : ''}
+          <span class="news-featured-source">${featured.source}</span>
+          <span class="news-featured-age">${timeAgo(featured.datetime)}</span>
+        </div>
+        <div class="news-featured-headline">${featured.headline}</div>
+        ${featured.summary ? `<div class="news-featured-summary">${featured.summary.slice(0,320)}${featured.summary.length>320?'…':''}</div>` : ''}
+        <div class="news-featured-footer">
+          <span class="news-sent ${sentCls[featured.sentiment]}">${sentLabels[featured.sentiment]}</span>
+          <span class="news-read-btn">Read full story →</span>
+        </div>
+      </div>
+    </a>`;
+
+  // Story card builder
+  const storyCard = a => {
+    const initials = a.source ? a.source.slice(0,2).toUpperCase() : '—';
+    return `<a class="news-card ${sentCls[a.sentiment]}-card ${a.isPortfolio?'portfolio-story':''}" href="${a.url}" target="_blank" rel="noopener">
+      <div class="news-inner">
+        ${a.image
+          ? `<img class="news-img" src="${a.image}" alt="" onerror="this.style.display='none'">`
+          : `<div class="news-img-placeholder"><span>${initials}</span></div>`
+        }
+        <div class="news-content">
+          <div class="news-meta">
+            <span class="news-tag">${a.category}</span>
+            ${a.isPortfolio ? '<span class="news-portfolio-dot" title="Your portfolio"></span>' : ''}
+            <span class="news-source">${a.source}</span>
+            <span class="news-age">${timeAgo(a.datetime)}</span>
+          </div>
+          <div class="news-headline">${a.headline}</div>
+          ${a.summary ? `<div class="news-summary">${a.summary}</div>` : ''}
+          <span class="news-sent ${sentCls[a.sentiment]}">${sentLabels[a.sentiment]}</span>
+        </div>
+      </div>
+    </a>`;
+  };
+
+  let html = featuredHtml;
+  if (portStories.length) {
+    html += `<div class="news-section-label">🟡 Your portfolio</div><div class="news-list">${portStories.map(storyCard).join('')}</div>`;
+  }
+  if (otherStories.length) {
+    html += `<div class="news-section-label">Market news</div><div class="news-list">${otherStories.map(storyCard).join('')}</div>`;
+  }
+
+  document.getElementById('news-container').innerHTML = html;
 }
 function timeAgo(ts){const d=Date.now()-ts*1000,h=Math.floor(d/3600000),dy=Math.floor(h/24);return dy>0?dy+'d ago':h>0?h+'h ago':Math.floor(d/60000)+'m ago';}
 
 // ═══════════════════════════════════════════════════════
-// MORNING BRIEF
+// MARKET PULSE STRIP
 // ═══════════════════════════════════════════════════════
-let briefPrices={}, briefNews=[];
-
-function setBriefState(s){
-  document.getElementById('brief-gen').style.display=s==='gen'?'flex':'none';
-  document.getElementById('brief-loading').style.display=s==='loading'?'flex':'none';
-  document.getElementById('brief-body').style.display=s==='body'?'block':'none';
-}
-function setBriefStep(m){document.getElementById('brief-step').textContent=m;}
-
-async function generateBrief(force=false){
-  // Show loading immediately so user knows the button worked
-  setBriefState('loading');
-  setBriefStep('Starting up...');
-  document.getElementById('brief-error').style.display='none';
-
-  // Check cache after showing loading (only if not forced)
-  if(!force){
-    const cached=localStorage.getItem('watcher-brief');
-    if(cached){
-      try{
-        const{date,html}=JSON.parse(cached);
-        if(date===new Date().toDateString()){
-          document.getElementById('brief-body').innerHTML=html;
-          document.getElementById('mkt-pills').innerHTML=localStorage.getItem('watcher-brief-pills')||'';
-          setBriefState('body');
-          return;
-        }
-      }catch(e){}
+async function fetchPulse() {
+  // ZAR/USD via Finnhub forex
+  try {
+    const r = await fetch(`https://finnhub.io/api/v1/forex/rates?base=USD&token=${FINNHUB_KEY}`);
+    const d = await r.json();
+    const zar = d?.quote?.ZAR;
+    if (zar) {
+      document.getElementById('ps-zar').textContent = 'R' + Number(zar).toFixed(2);
+      document.getElementById('ps-zar-chg').textContent = 'per US dollar';
+      document.getElementById('ps-zar-chg').className = 'ps-chg neu';
     }
-  }
-
-  try{
-    // Fetch market ETF proxies
-    setBriefStep('Fetching market data…');
-    const idxMap=[{l:'S&P 500',t:'SPY'},{l:'Nasdaq',t:'QQQ'},{l:'Oil',t:'USO'},{l:'Gold',t:'GLD'}];
-    for(const i of idxMap){try{const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=${i.t}&token=${FINNHUB_KEY}`);const d=await r.json();if(d.c)mktData[i.l]={price:d.c,change:d.d,changePct:d.dp};}catch(e){}await sleep(150);}
-
-    // Use already-fetched portfolio prices if available, else fetch
-    setBriefStep('Gathering your portfolio prices…');
-    if(!Object.keys(prices).length){
-      for(const p of PORTFOLIO){try{prices[p.ticker]=await fetchQuote(p.ticker);}catch(e){}await sleep(180);}
+  } catch(e) {}
+  await sleep(150);
+  // S&P 500 via SPY ETF
+  try {
+    const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=SPY&token=${FINNHUB_KEY}`);
+    const d = await r.json();
+    if (d.c) {
+      document.getElementById('ps-spy').textContent = '$' + Number(d.c).toFixed(2);
+      document.getElementById('ps-spy-chg').textContent = (d.dp>=0?'+':'') + Number(d.dp).toFixed(2) + '% today';
+      document.getElementById('ps-spy-chg').className = 'ps-chg ' + (d.dp>=0?'pos':'neg');
     }
-
-    // Fetch general market news + company-specific news from Finnhub
-    setBriefStep('Pulling the latest news...');
-    briefNews = [];
-    try {
-      // 1. General market news — broad macro, forex, commodities, economy
-      const categories = ['general', 'forex', 'merger'];
-      for (const cat of categories) {
-        try {
-          const r = await fetch(`https://finnhub.io/api/v1/news?category=${cat}&token=${FINNHUB_KEY}`);
-          const d = await r.json();
-          const items = (d||[]).filter(a=>a.headline&&a.summary).slice(0,8).map(a=>({
-            source: a.source||'Market',
-            headline: a.headline,
-            summary: (a.summary||'').slice(0,200),
-            type: 'general'
-          }));
-          briefNews.push(...items);
-        } catch(e) {}
-        await sleep(150);
-      }
-
-      // 2. Company-specific news for your most important holdings
-      const keyStocks = ['AAPL','AMZN','GOOGL','MSFT','NVDA','META','V','LLY'];
-      for (const ticker of keyStocks) {
-        try {
-          const now = new Date(), yesterday = new Date(now - 2*24*3600*1000);
-          const fmt = d => d.toISOString().slice(0,10);
-          const r = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${fmt(yesterday)}&to=${fmt(now)}&token=${FINNHUB_KEY}`);
-          const d = await r.json();
-          const items = (d||[]).filter(a=>a.headline&&a.summary).slice(0,2).map(a=>({
-            source: a.source||ticker,
-            headline: a.headline,
-            summary: (a.summary||'').slice(0,200),
-            ticker,
-            type: 'company'
-          }));
-          briefNews.push(...items);
-        } catch(e) {}
-        await sleep(150);
-      }
-
-      // Deduplicate by headline and limit total
-      const seen = new Set();
-      briefNews = briefNews.filter(a => {
-        const key = a.headline.slice(0,60).toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      }).slice(0, 40);
-
-    } catch(e) { console.warn('News fetch error:', e); }
-
-    // Build prompt
-    setBriefStep('Writing your brief...');
-    const portCtx = PORTFOLIO.map(p => {
-      const px = prices[p.ticker];
-      return px ? `${p.name} (${p.ticker}): ${$(px.price)} ${pct(px.changePct)} today` : `${p.name}: no data`;
-    }).join('\n');
-    const alerts = [...PORTFOLIO,...WATCHLIST].map(s => {
-      const px = prices[s.ticker];
-      if (!px?.high52||!px?.price) return null;
-      const d = (px.price-px.high52)/px.high52*100;
-      return d<=-10 ? `${s.name} (${s.ticker}): ${pct(d,false)} from 52-wk high` : null;
-    }).filter(Boolean);
-    const mktCtx = Object.entries(mktData).map(([l,d])=>`${l}: ${pct(d.changePct)}`).join(', ');
-
-    // Format news for prompt — include summaries so Gemini has real content
-    const newsCtx = briefNews.map(a =>
-      `[${a.ticker||a.source}] ${a.headline} — ${a.summary}`
-    ).join('\n');
-
-    const prompt = `You are writing a Morning Brief for a private investor named Angus Charter.
-Portfolio: Apple, Amazon, Alphabet, Microsoft, Nvidia, Visa, Meta, Eli Lilly, Stryker, CrowdStrike.
-Watchlist: AMD, Cisco, NuScale Power, Broadcom, TSMC, Booking Holdings, Uber.
-Strategy: long-term quality investor. Buys on macro fear-driven crashes (2008, Covid style). Growth-first, strong moat required. Buffett-influenced.
-
-MARKET DATA: ${mktCtx}
-
-PORTFOLIO PRICES TODAY:
-${portCtx}
-
-${alerts.length ? `WATCHLIST ALERTS:\n${alerts.join('\n')}` : 'No watchlist alerts triggered.'}
-
-NEWS FEED (general market + company specific):
-${newsCtx}
-
-Respond ONLY in valid JSON, no markdown, no backticks:
-{
-  "scorecard": "3-4 sentences. What happened in markets. The key macro driver today. One implication for long-term investors. Straight, analytical, interesting.",
-  "stories": [
-    {"tag":"MACRO","headline":"Short punchy headline","detail":"2 sentences. Specific numbers. What it means for markets.","move":"+2.1%","positive":true},
-    {"tag":"TECH","headline":"...","detail":"...","move":"...","positive":false},
-    {"tag":"ENERGY","headline":"...","detail":"...","move":"...","positive":true}
-  ],
-  "portfolio_pulse": [
-    {"name":"Company name","ticker":"TICK","detail":"One sentence — what is relevant for this stock today from the news, or confirm thesis intact if quiet.","move":"+1.2%"},
-    {"name":"...","ticker":"...","detail":"...","move":"..."},
-    {"name":"...","ticker":"...","detail":"...","move":"..."},
-    {"name":"...","ticker":"...","detail":"...","move":"..."}
-  ],
-  "call": "One sharp opinionated sentence. Is this a buying environment or a watching environment? Be direct.",
-  "call_action": "HOLD",
-  "watcher_level": 0,
-  "watcher_text": "Either confirm no alerts, or describe the alert concisely if something has triggered."
+  } catch(e) {}
+  await sleep(150);
+  // Nasdaq via QQQ ETF
+  try {
+    const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=QQQ&token=${FINNHUB_KEY}`);
+    const d = await r.json();
+    if (d.c) {
+      document.getElementById('ps-qqq').textContent = '$' + Number(d.c).toFixed(2);
+      document.getElementById('ps-qqq-chg').textContent = (d.dp>=0?'+':'') + Number(d.dp).toFixed(2) + '% today';
+      document.getElementById('ps-qqq-chg').className = 'ps-chg ' + (d.dp>=0?'pos':'neg');
+    }
+  } catch(e) {}
 }
 
-Rules:
-- stories: pick the 3 most market-moving stories from the news feed. Use real details from the summaries.
-- portfolio_pulse: pick the 4 most newsworthy of Angus's holdings. Use the company news if available.
-- call_action must be exactly: HOLD, WATCH, ADD, or AVOID
-- watcher_level: 0=nothing, 1=watch, 2=consider, 3=must buy
-- Keep it tight. Every sentence earns its place. Not text heavy.`;
+// ═══════════════════════════════════════════════════════
+// WHY IS IT MOVING — alert explainer
+// ═══════════════════════════════════════════════════════
+const whyCache = {};
+
+async function fetchWhyMoving(ticker, name, drop) {
+  if (whyCache[ticker]) return whyCache[ticker];
+  try {
+    // Get recent news for this ticker
+    const now = new Date(), yesterday = new Date(now - 2*24*3600*1000);
+    const fmt = d => d.toISOString().slice(0,10);
+    const r = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${fmt(yesterday)}&to=${fmt(now)}&token=${FINNHUB_KEY}`);
+    const news = await r.json();
+    const headlines = (news||[]).slice(0,5).map(a => a.headline).join(' | ');
+
+    // Ask Gemini to classify
+    const prompt = `${name} (${ticker}) is down ${Math.abs(drop).toFixed(1)}% from its 52-week high.
+Recent headlines: ${headlines || 'No specific news found.'}
+Also check: is the broader market (S&P 500) also down significantly today?
+
+In ONE sentence (max 20 words), explain why this stock is down and whether it looks like macro fear or company-specific bad news.
+Start with either "Macro fear —" or "Company news —" then your explanation.`;
 
     const res = await fetch(GEMINI_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 2000 }
+        generationConfig: { temperature: 0.3, maxOutputTokens: 80 }
       })
     });
     const data = await res.json();
-    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!raw) throw new Error(data?.error?.message || 'No response from Gemini');
-    const brief = JSON.parse(raw.replace(/```json|```/g,'').trim());
-    renderBrief(brief);
-
-    // Cache
-    const html=document.getElementById('brief-body').innerHTML;
-    const pills=document.getElementById('mkt-pills').innerHTML;
-    localStorage.setItem('watcher-brief',JSON.stringify({date:new Date().toDateString(),html}));
-    localStorage.setItem('watcher-brief-pills',pills);
-    setBriefState('body');
-
-  }catch(e){
-    console.error('Brief error:',e);
-    setBriefState('gen');
-    const el=document.getElementById('brief-error');
-    el.textContent='Could not generate: '+e.message;
-    el.style.display='block';
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    whyCache[ticker] = text || 'Unable to analyse reason for move.';
+    return whyCache[ticker];
+  } catch(e) {
+    return 'Analysis unavailable.';
   }
 }
 
-function renderBrief(b){
-  // Market pills
-  document.getElementById('mkt-pills').innerHTML=Object.entries(mktData).map(([l,d])=>`<span class="mpill ${cc(d.changePct)}">${l} ${pct(d.changePct)}</span>`).join('');
-  // Market data row
-  document.getElementById('b-mkt-row').innerHTML=Object.entries(mktData).map(([l,d])=>`<div class="mdata"><div class="mdata-label">${l}</div><div class="mdata-val">${$(d.price)}</div><div class="mdata-chg ${cc(d.changePct)}">${pct(d.changePct)}</div></div>`).join('');
-  // Scorecard
-  document.getElementById('b-scorecard').innerHTML=b.scorecard.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-  // Stories
-  document.getElementById('b-stories').innerHTML=(b.stories||[]).map((s,i)=>`<div class="story"><div class="story-n">0${i+1}</div><div class="story-body"><div class="story-tag">${s.tag}</div><div class="story-hl">${s.headline}</div><div class="story-detail">${s.detail}</div>${s.move?`<div class="story-move ${s.positive?'pos':'neg'}">${s.move}</div>`:''}</div></div>`).join('');
-  // Portfolio pulse
-  document.getElementById('b-pulse').innerHTML=(b.portfolio_pulse||[]).map(p=>{const px=prices[p.ticker];const mv=px?pct(px.changePct):p.move;const isPos=mv&&!mv.startsWith('-');return`<div class="pulse-card"><div class="pulse-name">${p.name}</div><div class="pulse-detail">${p.detail}</div><div class="pulse-move ${isPos?'pos':'neg'}">${mv||'—'}</div></div>`;}).join('');
-  // The call
-  document.getElementById('b-call').textContent=b.call;
-  const actLbl={HOLD:'Hold your positions',WATCH:'Watch closely',ADD:'Consider adding',AVOID:'Avoid new positions'};
-  const actCls={HOLD:'act-hold',WATCH:'act-watch',ADD:'act-add',AVOID:'act-avoid'};
-  document.getElementById('b-action').innerHTML=`<span class="${actCls[b.call_action]||'act-hold'}">${b.call_action}</span>${actLbl[b.call_action]||''}`;
-  // Watcher alert
-  const icons={0:'🛡️',1:'👀',2:'⚠️',3:'🚨'}, lbls={0:'All clear',1:'Level 1 — Watch',2:'Level 2 — Consider',3:'Level 3 — Must Buy'};
-  const cls={0:'wa-0',1:'wa-1',2:'wa-2',3:'wa-3'}, llbl={0:'wa-l0',1:'wa-l1',2:'wa-l2',3:'wa-l3'};
-  const lv=b.watcher_level||0;
-  document.getElementById('b-watcher').innerHTML=`<div class="wa-card ${cls[lv]}"><div class="wa-icon">${icons[lv]}</div><div><div class="wa-lbl ${llbl[lv]}">${lbls[lv]}</div><div class="wa-txt">${b.watcher_text}</div></div></div>`;
-  // Timestamp
-  document.getElementById('b-gentime').textContent='Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+// ═══════════════════════════════════════════════════════
+// EARNINGS CALENDAR
+// ═══════════════════════════════════════════════════════
+async function loadEarnings() {
+  const container = document.getElementById('earnings-container');
+  container.innerHTML = '<div class="earnings-empty">Loading earnings calendar…</div>';
+
+  const today = new Date();
+  const in90  = new Date(today.getTime() + 90*24*3600*1000);
+  const fmt   = d => d.toISOString().slice(0,10);
+  const earnings = []; // { ticker, name, date, hour }
+
+  for (const p of PORTFOLIO) {
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/calendar/earnings?symbol=${p.ticker}&from=${fmt(today)}&to=${fmt(in90)}&token=${FINNHUB_KEY}`);
+      const d = await r.json();
+      (d?.earningsCalendar||[]).forEach(e => {
+        if (!e.date) return;
+        earnings.push({ ticker: p.ticker, name: p.name, date: e.date, hour: e.hour||'tbc' });
+      });
+    } catch(e) {}
+    await sleep(150);
+  }
+
+  if (!earnings.length) {
+    container.innerHTML = '<div class="earnings-empty" style="animation:none;opacity:0.5">No earnings dates found in the next 90 days.</div>';
+    return;
+  }
+
+  // Group by month
+  const byMonth = {};
+  earnings.forEach(e => {
+    const key = e.date.slice(0,7); // YYYY-MM
+    if (!byMonth[key]) byMonth[key] = {};
+    if (!byMonth[key][e.date]) byMonth[key][e.date] = [];
+    byMonth[key][e.date].push(e);
+  });
+
+  const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const todayStr = fmt(today);
+
+  let html = '';
+
+  for (const [monthKey, days] of Object.entries(byMonth).sort()) {
+    const [yr, mo] = monthKey.split('-').map(Number);
+    const firstDay = new Date(yr, mo-1, 1);
+    const lastDay  = new Date(yr, mo, 0);
+    const startDow = firstDay.getDay(); // 0=Sun
+    const totalDays = lastDay.getDate();
+
+    html += `<div class="cal-month">
+      <div class="cal-month-title">${MONTH_NAMES[mo-1]} ${yr}</div>
+      <div class="cal-grid">
+        ${DAY_NAMES.map(d => `<div class="cal-day-header">${d}</div>`).join('')}`;
+
+    // Empty cells before month starts
+    for (let i = 0; i < startDow; i++) {
+      html += `<div class="cal-day empty"></div>`;
+    }
+
+    // Day cells
+    for (let d = 1; d <= totalDays; d++) {
+      const dateStr = `${yr}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday = dateStr === todayStr;
+      const dayEarnings = days[dateStr] || [];
+
+      const tickers = dayEarnings.map(e => {
+        const cls = e.hour === 'bmo' ? 'bmo' : e.hour === 'amc' ? 'amc' : 'tbc';
+        const when = e.hour === 'bmo' ? 'Before open' : e.hour === 'amc' ? 'After close' : 'Time TBC';
+        return `<span class="cal-ticker ${cls}">
+          ${e.ticker}
+          <span class="tooltip">${e.name} · ${when}</span>
+        </span>`;
+      }).join('');
+
+      html += `<div class="cal-day${isToday?' today':''}">
+        <div class="cal-day-num">${d}</div>
+        <div class="cal-earnings">${tickers}</div>
+      </div>`;
+    }
+
+    // Fill remaining cells
+    const endDow = (startDow + totalDays - 1) % 7;
+    if (endDow < 6) {
+      for (let i = endDow + 1; i <= 6; i++) {
+        html += `<div class="cal-day empty"></div>`;
+      }
+    }
+
+    html += `</div>
+      <div class="cal-legend">
+        <div class="cal-leg"><div class="cal-leg-dot" style="background:var(--green)"></div>Before market open</div>
+        <div class="cal-leg"><div class="cal-leg-dot" style="background:var(--l2-color)"></div>After market close</div>
+        <div class="cal-leg"><div class="cal-leg-dot" style="background:var(--ink-4)"></div>Time TBC</div>
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
 }
+
 
 // ═══════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════
-function showTab(name,el){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('panel-'+name).classList.add('active');
+function showTab(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
   el.classList.add('active');
-  if(name==='news'&&!newsCache.length)loadNews();
+  if (name === 'news' && !newsCache.length) loadNews();
+  if (name === 'earnings') loadEarnings();
 }
 
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
-document.getElementById('brief-date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-// Load prices silently in the background on page load
-// Brief is generated manually when user clicks the button
 init();
+fetchPulse();
 setInterval(init, 5*60*1000);
+setInterval(fetchPulse, 5*60*1000);
 </script>
 </body>
 </html>
