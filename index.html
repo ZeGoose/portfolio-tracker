@@ -310,11 +310,10 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 
 /* ── MARKET PULSE STRIP ── */
 .pulse-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:20px; animation:up 0.3s ease both; }
-.ps-item { background:var(--ink-2); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; }
-.ps-label { font-family:var(--mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--cream-3); }
-.ps-right { text-align:right; }
-.ps-val { font-family:var(--serif); font-size:18px; color:var(--cream); line-height:1; }
-.ps-chg { font-family:var(--mono); font-size:10px; margin-top:2px; }
+.ps-item { background:var(--ink-2); padding:12px 16px; display:flex; flex-direction:column; gap:4px; }
+.ps-label { font-family:var(--mono); font-size:8px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cream-3); }
+.ps-val { font-family:var(--serif); font-size:22px; color:var(--cream); line-height:1; }
+.ps-chg { font-family:var(--mono); font-size:11px; }
 
 /* ── WHY MOVING EXPLAINER ── */
 .why-card { margin-top:6px; display:flex; gap:8px; align-items:flex-start; padding:8px 12px; border-radius:2px; border:1px solid var(--border); background:var(--ink-3); }
@@ -346,6 +345,16 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .news-featured-footer { display:flex; align-items:center; justify-content:space-between; }
 .news-featured-sent { font-family:var(--mono); font-size:9px; padding:3px 9px; border-radius:2px; }
 .news-read-btn { font-family:var(--mono); font-size:9px; letter-spacing:0.08em; color:var(--gold); }
+
+/* TOP 3 STORIES GRID */
+.news-top-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:4px; }
+.news-top-card { background:var(--ink-2); border:1px solid var(--border); border-radius:3px; padding:16px; text-decoration:none; display:flex; flex-direction:column; gap:8px; transition:border-color 0.2s; cursor:pointer; }
+.news-top-card:hover { border-color:var(--border-2); background:var(--ink-3); }
+.news-top-cat { font-family:var(--mono); font-size:8px; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold-dim); }
+.news-top-hl { font-family:var(--serif); font-size:16px; font-weight:400; color:var(--cream); line-height:1.4; flex:1; }
+.news-top-sum { font-size:12px; color:var(--cream-2); line-height:1.65; }
+.news-top-footer { display:flex; align-items:center; justify-content:space-between; margin-top:auto; gap:8px; flex-wrap:wrap; }
+.news-top-src { font-family:var(--mono); font-size:9px; color:var(--cream-3); }
 
 /* NEWS GRID */
 .news-list { display:flex; flex-direction:column; gap:2px; }
@@ -517,9 +526,9 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
   <div class="status" id="status"></div>
   <!-- MARKET PULSE STRIP -->
   <div class="pulse-strip" id="pulse-strip">
-    <div class="ps-item"><div class="ps-label">USD / ZAR</div><div class="ps-right"><div class="ps-val" id="ps-zar">—</div><div class="ps-chg neu" id="ps-zar-chg">—</div></div></div>
-    <div class="ps-item"><div class="ps-label">S&P 500</div><div class="ps-right"><div class="ps-val" id="ps-spy">—</div><div class="ps-chg neu" id="ps-spy-chg">—</div></div></div>
-    <div class="ps-item"><div class="ps-label">Nasdaq</div><div class="ps-right"><div class="ps-val" id="ps-qqq">—</div><div class="ps-chg neu" id="ps-qqq-chg">—</div></div></div>
+    <div class="ps-item"><div class="ps-label">USD / ZAR</div><div class="ps-val" id="ps-zar">—</div><div class="ps-chg neu" id="ps-zar-chg">—</div></div>
+    <div class="ps-item"><div class="ps-label">S&P 500</div><div class="ps-val" id="ps-spy">—</div><div class="ps-chg neu" id="ps-spy-chg">—</div></div>
+    <div class="ps-item"><div class="ps-label">Nasdaq</div><div class="ps-val" id="ps-qqq">—</div><div class="ps-chg neu" id="ps-qqq-chg">—</div></div>
   </div>
   <div class="metrics">
     <div class="metric"><div class="metric-label">Total invested</div><div class="metric-val" id="m-cost">—</div><div class="metric-sub neu" id="m-pos">—</div></div>
@@ -626,6 +635,9 @@ const WATCHLIST = [
   { name:'Defiance Connective Tech ETF',  ticker:'UFOX' },
   { name:'Micron Technology',             ticker:'MU'   },
   { name:'KraneShares China Internet ETF',ticker:'KWEB' },
+  { name:'Vertiv',                        ticker:'VRT'  },
+  { name:'Vistra',                        ticker:'VST'  },
+  { name:'Corning',                       ticker:'GLW'  },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -890,51 +902,56 @@ function buildNewsFilters() {
 function filterNews(t) { newsFilter = t; buildNewsFilters(); renderNews(); }
 function filterCat(c)  { newsCat = c;    buildNewsFilters(); renderNews(); }
 
+function isGenericLogo(url) {
+  if (!url) return true;
+  const bad = ['yahoo','yimg','placeholder','logo','icon','default','blank','transparent','1x1','spacer','s.yimg','media.zenfs'];
+  return bad.some(b => url.toLowerCase().includes(b));
+}
+
 function renderNews() {
   let list = newsCache;
-  if (newsFilter !== 'ALL') list = list.filter(a => a.ticker === newsFilter || isPortfolioStory(a.headline, a.summary, a.ticker) && a.ticker === newsFilter);
+  if (newsFilter !== 'ALL') list = list.filter(a => a.ticker === newsFilter);
   if (newsCat !== 'ALL') list = list.filter(a => a.category === newsCat);
   if (!list.length) {
     document.getElementById('news-container').innerHTML = '<div class="news-loading">No stories match this filter.</div>';
     return;
   }
 
-  const featured = list[0];
-  const rest = list.slice(1);
-  const portStories = rest.filter(a => a.isPortfolio);
-  const otherStories = rest.filter(a => !a.isPortfolio);
+  // Split: top general market stories vs portfolio-specific
+  const generalStories  = list.filter(a => !a.ticker && a.summary && a.summary.length > 40).slice(0, 3);
+  const portfolioStories = list.filter(a => a.isPortfolio || a.ticker).slice(0, 20);
 
   const sentLabels = { pos:'Positive signal', neg:'Negative signal', neu:'Neutral' };
   const sentCls    = { pos:'sent-pos', neg:'sent-neg', neu:'sent-neu' };
 
-  // Featured card
-  const featuredHtml = `
-    <a class="news-featured" href="${featured.url}" target="_blank" rel="noopener">
-      <div class="news-featured-inner">
-        <div class="news-featured-meta">
-          <span class="news-featured-tag">${featured.category}</span>
-          ${featured.isPortfolio ? '<span class="news-portfolio-dot" title="Relates to your portfolio"></span>' : ''}
-          <span class="news-featured-source">${featured.source}</span>
-          <span class="news-featured-age">${timeAgo(featured.datetime)}</span>
+  // Big featured story block — 3 cards side by side at top
+  const featuredHtml = generalStories.length ? `
+    <div class="news-section-label" style="margin-top:0">Top market stories</div>
+    <div class="news-top-grid">${generalStories.map(a => `
+      <a class="news-top-card" href="${a.url}" target="_blank" rel="noopener">
+        <div class="news-top-cat">${a.category}</div>
+        <div class="news-top-hl">${a.headline}</div>
+        <div class="news-top-sum">${(a.summary||'').slice(0,180)}${(a.summary||'').length>180?'…':''}</div>
+        <div class="news-top-footer">
+          <span class="news-sent ${sentCls[a.sentiment]}">${sentLabels[a.sentiment]}</span>
+          <span class="news-top-src">${a.source} · ${timeAgo(a.datetime)}</span>
         </div>
-        <div class="news-featured-headline">${featured.headline}</div>
-        ${featured.summary ? `<div class="news-featured-summary">${featured.summary.slice(0,320)}${featured.summary.length>320?'…':''}</div>` : ''}
-        <div class="news-featured-footer">
-          <span class="news-sent ${sentCls[featured.sentiment]}">${sentLabels[featured.sentiment]}</span>
-          <span class="news-read-btn">Read full story →</span>
-        </div>
-      </div>
-    </a>`;
+      </a>`).join('')}
+    </div>` : '';
 
-  // Story card builder
+  // Portfolio stories — compact list with image
   const storyCard = a => {
-    const initials = a.source ? a.source.slice(0,2).toUpperCase() : '—';
+    const hasImg = a.image && !isGenericLogo(a.image);
+    // Category-based emoji placeholder instead of logo
+    const catEmoji = { Earnings:'📊', Macro:'🌍', Tech:'💻', Energy:'⚡', Geo:'🗺️', Market:'📈' };
+    const emoji = catEmoji[a.category] || '📰';
     return `<a class="news-card ${sentCls[a.sentiment]}-card ${a.isPortfolio?'portfolio-story':''}" href="${a.url}" target="_blank" rel="noopener">
       <div class="news-inner">
-        ${a.image
-          ? `<img class="news-img" src="${a.image}" alt="" onerror="this.style.display='none'">`
-          : `<div class="news-img-placeholder"><span>${initials}</span></div>`
+        ${hasImg
+          ? `<img class="news-img" src="${a.image}" alt="" onerror="this.parentNode.querySelector('.news-img-placeholder').style.display='flex';this.style.display='none'">`
+          : ''
         }
+        <div class="news-img-placeholder" style="${hasImg?'display:none':''}"><span>${emoji}</span></div>
         <div class="news-content">
           <div class="news-meta">
             <span class="news-tag">${a.category}</span>
@@ -951,11 +968,8 @@ function renderNews() {
   };
 
   let html = featuredHtml;
-  if (portStories.length) {
-    html += `<div class="news-section-label">🟡 Your portfolio</div><div class="news-list">${portStories.map(storyCard).join('')}</div>`;
-  }
-  if (otherStories.length) {
-    html += `<div class="news-section-label">Market news</div><div class="news-list">${otherStories.map(storyCard).join('')}</div>`;
+  if (portfolioStories.length) {
+    html += `<div class="news-section-label">Your portfolio</div><div class="news-list">${portfolioStories.map(storyCard).join('')}</div>`;
   }
 
   document.getElementById('news-container').innerHTML = html;
@@ -966,17 +980,19 @@ function timeAgo(ts){const d=Date.now()-ts*1000,h=Math.floor(d/3600000),dy=Math.
 // MARKET PULSE STRIP
 // ═══════════════════════════════════════════════════════
 async function fetchPulse() {
-  // ZAR/USD via Finnhub forex
+  // ZAR/USD via Finnhub forex quote (OANDA:USD_ZAR)
   try {
-    const r = await fetch(`https://finnhub.io/api/v1/forex/rates?base=USD&token=${FINNHUB_KEY}`);
+    const r = await fetch(`https://finnhub.io/api/v1/forex/candle?symbol=OANDA:USD_ZAR&resolution=D&count=2&token=${FINNHUB_KEY}`);
     const d = await r.json();
-    const zar = d?.quote?.ZAR;
-    if (zar) {
-      document.getElementById('ps-zar').textContent = 'R' + Number(zar).toFixed(2);
-      document.getElementById('ps-zar-chg').textContent = 'per US dollar';
-      document.getElementById('ps-zar-chg').className = 'ps-chg neu';
+    if (d.c && d.c.length) {
+      const cur = d.c[d.c.length-1];
+      const prev = d.c.length > 1 ? d.c[d.c.length-2] : cur;
+      const chg = ((cur - prev) / prev) * 100;
+      document.getElementById('ps-zar').textContent = 'R' + Number(cur).toFixed(2);
+      document.getElementById('ps-zar-chg').textContent = (chg>=0?'+':'') + chg.toFixed(2) + '% vs yesterday';
+      document.getElementById('ps-zar-chg').className = 'ps-chg ' + (chg>=0?'pos':'neg');
     }
-  } catch(e) {}
+  } catch(e) { console.warn('ZAR fetch failed', e); }
   await sleep(150);
   // S&P 500 via SPY ETF
   try {
@@ -1009,35 +1025,40 @@ const whyCache = {};
 async function fetchWhyMoving(ticker, name, drop) {
   if (whyCache[ticker]) return whyCache[ticker];
   try {
-    // Get recent news for this ticker
+    // Get recent news headlines for this ticker
     const now = new Date(), yesterday = new Date(now - 2*24*3600*1000);
     const fmt = d => d.toISOString().slice(0,10);
     const r = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${fmt(yesterday)}&to=${fmt(now)}&token=${FINNHUB_KEY}`);
     const news = await r.json();
-    const headlines = (news||[]).slice(0,5).map(a => a.headline).join(' | ');
+    const headlines = (news||[]).slice(0,4).map(a => a.headline).filter(Boolean).join(' | ');
 
-    // Ask Gemini to classify
-    const prompt = `${name} (${ticker}) is down ${Math.abs(drop).toFixed(1)}% from its 52-week high.
-Recent headlines: ${headlines || 'No specific news found.'}
-Also check: is the broader market (S&P 500) also down significantly today?
+    if (!headlines) {
+      // No news found — make a judgement based on drop alone
+      const result = Math.abs(drop) >= 20
+        ? 'No specific news found — broad market pressure likely. Check if S&P 500 is also down.'
+        : 'No specific news found — likely routine market movement.';
+      whyCache[ticker] = result;
+      return result;
+    }
 
-In ONE sentence (max 20 words), explain why this stock is down and whether it looks like macro fear or company-specific bad news.
-Start with either "Macro fear —" or "Company news —" then your explanation.`;
+    const prompt = `A stock called ${name} (${ticker}) is down ${Math.abs(drop).toFixed(1)}% from its 52-week high. Recent headlines: "${headlines}". In one sentence starting with either "Macro fear —" or "Company news —", explain the most likely reason for the decline. Be specific. Max 20 words.`;
 
     const res = await fetch(GEMINI_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 80 }
+        generationConfig: { temperature: 0.2, maxOutputTokens: 60 }
       })
     });
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-    whyCache[ticker] = text || 'Unable to analyse reason for move.';
-    return whyCache[ticker];
+    const result = text || (headlines ? 'Recent headlines suggest company-specific news — check below.' : 'No specific news found.');
+    whyCache[ticker] = result;
+    return result;
   } catch(e) {
-    return 'Analysis unavailable.';
+    console.warn('Why-moving fetch failed:', ticker, e.message);
+    return `Down ${Math.abs(drop).toFixed(0)}% from peak — check recent news for this stock.`;
   }
 }
 
