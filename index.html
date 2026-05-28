@@ -383,7 +383,26 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .news-loading { font-family:var(--mono); font-size:11px; color:var(--cream-3); padding:60px; text-align:center; animation:blink 1.4s ease infinite; }
 .news-section-label { font-family:var(--mono); font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--cream-3); margin:16px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
 
-/* ── EARNINGS PANEL ── */
+/* ── FORECAST PANEL ── */
+#panel-forecast { padding:28px 32px 60px; }
+.forecast-pill { font-family:var(--serif); font-size:13px; padding:5px 14px; border:1px solid var(--border-2); border-radius:3px; background:transparent; color:var(--cream-dim,var(--cream-2)); cursor:pointer; transition:all 0.2s; }
+.forecast-pill:hover { border-color:var(--gold-dim); color:var(--cream); }
+.forecast-pill.active { background:var(--ink-3); border-color:var(--gold); color:var(--gold); }
+.forecast-card { background:var(--ink-2); border:1px solid var(--border); border-radius:4px; overflow:hidden; animation:up 0.4s ease both; }
+.forecast-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.forecast-name { font-family:var(--serif); font-size:20px; color:var(--cream); }
+.forecast-signal { display:flex; align-items:center; gap:10px; }
+.signal-bullish { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; padding:4px 12px; border-radius:2px; background:var(--green-bg); color:var(--green); border:1px solid rgba(78,153,104,0.25); }
+.signal-bearish { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; padding:4px 12px; border-radius:2px; background:var(--red-bg); color:var(--red); border:1px solid rgba(194,91,91,0.25); }
+.signal-neutral { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; padding:4px 12px; border-radius:2px; background:var(--ink-3); color:var(--cream-3); border:1px solid var(--border-2); }
+.forecast-meta { display:flex; gap:20px; padding:12px 20px; border-bottom:1px solid var(--border); background:var(--ink-3); }
+.forecast-meta-item { display:flex; flex-direction:column; gap:3px; }
+.forecast-meta-label { font-family:var(--mono); font-size:8px; letter-spacing:0.12em; text-transform:uppercase; color:var(--cream-3); }
+.forecast-meta-val { font-family:var(--serif); font-size:18px; color:var(--cream); }
+.forecast-chart-wrap { padding:20px; }
+.forecast-loading { font-family:var(--mono); font-size:11px; color:var(--cream-3); padding:80px; text-align:center; animation:blink 1.4s ease infinite; }
+.forecast-error { font-family:var(--mono); font-size:11px; color:var(--red); padding:40px; text-align:center; }
+.forecast-disclaimer { font-family:var(--mono); font-size:9px; color:var(--cream-3); opacity:0.4; padding:0 20px 16px; letter-spacing:0.04em; }
 #panel-earnings { padding:28px 32px 60px; }
 .earnings-intro { font-family:var(--mono); font-size:10px; color:var(--cream-3); margin-bottom:24px; letter-spacing:0.04em; }
 .earnings-calendar { display:flex; flex-direction:column; gap:1px; }
@@ -516,6 +535,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
   <div class="tab" onclick="showTab('alerts',this)">Alerts</div>
   <div class="tab" onclick="showTab('news',this)">News</div>
   <div class="tab" onclick="showTab('earnings',this)">Earnings</div>
+  <div class="tab" onclick="showTab('forecast',this)">Forecast</div>
 </div>
 
 
@@ -592,8 +612,21 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 </div>
 
 <!-- ══════════════════════════════════════════════ -->
-<!-- EARNINGS PANEL                                -->
+<!-- FORECAST PANEL                                -->
 <!-- ══════════════════════════════════════════════ -->
+<div class="panel" id="panel-forecast">
+  <div class="sh" style="margin-bottom:6px">
+    <div class="sh-title">30-day price forecast</div>
+    <div class="sh-note">Google TimesFM 1.0 · pattern-based · not financial advice</div>
+  </div>
+  <p style="font-family:var(--mono);font-size:10px;color:var(--cream-3);margin-bottom:20px;line-height:1.6;">
+    Powered by Google's TimesFM — trained on 100 billion time series data points. Select a stock to see its 30-day price projection with confidence bands. Based on price patterns only — does not account for news or earnings.
+  </p>
+  <!-- Ticker selector -->
+  <div id="forecast-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;"></div>
+  <!-- Chart and result -->
+  <div id="forecast-container"></div>
+</div>
 <div class="panel" id="panel-earnings">
   <div class="sh" style="margin-bottom:6px"><div class="sh-title">Earnings calendar</div><div class="sh-note">Your holdings · next 90 days</div></div>
   <div class="earnings-intro">Hover any ticker to see the company name. Green = before market open · Orange = after market close.</div>
@@ -607,6 +640,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 const GEMINI_KEY  = 'AIzaSyA9ZLVcdsJ-Jrs9X0Yrjd08eu0mxA33y3g';
 const FINNHUB_KEY = 'd7orkqhr01qmthudab50d7orkqhr01qmthudab5g';
 const GEMINI_URL  = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+const TIMESFM_URL = 'https://angoose96-watcher-timesfm.hf.space';
 
 const PORTFOLIO = [
   { name:'Apple',       ticker:'AAPL', shares:13, cost:248.40 },
@@ -1167,6 +1201,232 @@ async function loadEarnings() {
 
 
 // ═══════════════════════════════════════════════════════
+// FORECAST — TimesFM integration
+// ═══════════════════════════════════════════════════════
+let activeForecastTicker = 'AAPL';
+let forecastCache = {};
+
+function initForecast() {
+  // Build ticker pills
+  const el = document.getElementById('forecast-pills');
+  el.innerHTML = PORTFOLIO.map(p =>
+    `<button class="forecast-pill ${p.ticker === activeForecastTicker ? 'active' : ''}"
+      onclick="selectForecastTicker('${p.ticker}')">${p.ticker}</button>`
+  ).join('');
+  loadForecast(activeForecastTicker);
+}
+
+function selectForecastTicker(ticker) {
+  activeForecastTicker = ticker;
+  document.querySelectorAll('.forecast-pill').forEach(b =>
+    b.classList.toggle('active', b.textContent === ticker)
+  );
+  loadForecast(ticker);
+}
+
+async function loadForecast(ticker) {
+  const container = document.getElementById('forecast-container');
+
+  // Show cached result instantly
+  if (forecastCache[ticker]) {
+    renderForecast(forecastCache[ticker]);
+    return;
+  }
+
+  container.innerHTML = `<div class="forecast-loading">Fetching ${ticker} forecast from TimesFM…<br><span style="opacity:0.5;font-size:10px">First request may take 30–60s if the model is waking up</span></div>`;
+
+  try {
+    const res = await fetch(`${TIMESFM_URL}/forecast/${ticker}?days=30`);
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    forecastCache[ticker] = data;
+    renderForecast(data);
+  } catch(e) {
+    container.innerHTML = `<div class="forecast-error">Could not load forecast for ${ticker}.<br>${e.message}<br><br><button onclick="loadForecast('${ticker}')" style="font-family:var(--mono);font-size:10px;color:var(--gold);background:transparent;border:1px solid var(--gold-dim);padding:6px 16px;border-radius:3px;cursor:pointer;margin-top:8px">↻ Try again</button></div>`;
+  }
+}
+
+function renderForecast(data) {
+  const container = document.getElementById('forecast-container');
+  const p = PORTFOLIO.find(x => x.ticker === data.ticker);
+  const pct = data.pct_change;
+  const sigCls = pct > 5 ? 'signal-bullish' : pct < -5 ? 'signal-bearish' : 'signal-neutral';
+  const sigTxt = pct > 5 ? '↑ Bullish' : pct < -5 ? '↓ Bearish' : '→ Neutral';
+  const cc = n => n >= 0 ? 'pos' : 'neg';
+
+  container.innerHTML = `
+    <div class="forecast-card">
+      <div class="forecast-head">
+        <div>
+          <div class="forecast-name">${p?.name || data.ticker}</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--cream-3);margin-top:2px">${data.ticker} · 30-day projection</div>
+        </div>
+        <div class="forecast-signal">
+          <span class="${sigCls}">${sigTxt}</span>
+        </div>
+      </div>
+      <div class="forecast-meta">
+        <div class="forecast-meta-item">
+          <div class="forecast-meta-label">Current price</div>
+          <div class="forecast-meta-val">${$(data.current_price)}</div>
+        </div>
+        <div class="forecast-meta-item">
+          <div class="forecast-meta-label">30-day forecast</div>
+          <div class="forecast-meta-val ${cc(pct)}">${$(data.forecast_30d)}</div>
+        </div>
+        <div class="forecast-meta-item">
+          <div class="forecast-meta-label">Projected change</div>
+          <div class="forecast-meta-val ${cc(pct)}">${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%</div>
+        </div>
+        <div class="forecast-meta-item">
+          <div class="forecast-meta-label">Confidence range</div>
+          <div class="forecast-meta-val" style="font-size:14px">${$(data.forecast.low[data.forecast.low.length-1])} – ${$(data.forecast.high[data.forecast.high.length-1])}</div>
+        </div>
+      </div>
+      <div class="forecast-chart-wrap">
+        <canvas id="forecast-chart" height="280"></canvas>
+      </div>
+      <div class="forecast-disclaimer">
+        TimesFM 1.0 · Pattern-based forecast · Does not account for earnings, news, or macro events · Not financial advice · Generated ${new Date(data.generated_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+      </div>
+    </div>`;
+
+  // Draw chart with Chart.js
+  drawForecastChart(data);
+}
+
+function drawForecastChart(data) {
+  const script = document.getElementById('chartjs-script');
+  if (!script) {
+    const s = document.createElement('script');
+    s.id = 'chartjs-script';
+    s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+    s.onload = () => _drawChart(data);
+    document.head.appendChild(s);
+  } else {
+    _drawChart(data);
+  }
+}
+
+function _drawChart(data) {
+  const ctx = document.getElementById('forecast-chart');
+  if (!ctx) return;
+
+  // Destroy previous chart if exists
+  if (window._forecastChart) { window._forecastChart.destroy(); }
+
+  const histDates   = data.history.dates;
+  const histPrices  = data.history.prices;
+  const fcastDates  = data.forecast.dates;
+  const fcastPoint  = data.forecast.point;
+  const fcastLow    = data.forecast.low;
+  const fcastHigh   = data.forecast.high;
+
+  // Last historical price is the bridge point
+  const bridgeDate  = histDates[histDates.length - 1];
+  const bridgePrice = histPrices[histPrices.length - 1];
+
+  const allLabels = [...histDates, ...fcastDates];
+  const histData  = [...histPrices, ...Array(fcastDates.length).fill(null)];
+  const pointData = [...Array(histDates.length - 1).fill(null), bridgePrice, ...fcastPoint];
+  const lowData   = [...Array(histDates.length - 1).fill(null), bridgePrice, ...fcastLow];
+  const highData  = [...Array(histDates.length - 1).fill(null), bridgePrice, ...fcastHigh];
+
+  const gold   = 'rgba(201,150,58,1)';
+  const goldDim= 'rgba(201,150,58,0.15)';
+  const green  = 'rgba(78,153,104,1)';
+  const cream  = 'rgba(240,234,216,0.8)';
+  const red    = 'rgba(194,91,91,1)';
+
+  const pct = data.pct_change;
+  const forecastColor = pct > 5 ? green : pct < -5 ? red : gold;
+
+  window._forecastChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        {
+          label: 'Historical',
+          data: histData,
+          borderColor: cream,
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.3,
+          spanGaps: false,
+        },
+        {
+          label: 'Forecast',
+          data: pointData,
+          borderColor: forecastColor,
+          borderWidth: 2,
+          borderDash: [5, 4],
+          pointRadius: 0,
+          tension: 0.3,
+          spanGaps: false,
+        },
+        {
+          label: 'High (p90)',
+          data: highData,
+          borderColor: 'transparent',
+          backgroundColor: goldDim,
+          fill: '+1',
+          pointRadius: 0,
+          tension: 0.3,
+          spanGaps: false,
+        },
+        {
+          label: 'Low (p10)',
+          data: lowData,
+          borderColor: 'transparent',
+          backgroundColor: goldDim,
+          fill: false,
+          pointRadius: 0,
+          tension: 0.3,
+          spanGaps: false,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(22,20,16,0.95)',
+          titleColor: 'rgba(240,234,216,0.5)',
+          bodyColor: '#EDE7D4',
+          borderColor: 'rgba(237,231,212,0.1)',
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => ctx.parsed.y != null ? ` $${ctx.parsed.y.toFixed(2)}` : null,
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: 'rgba(107,100,84,0.8)',
+            font: { family: 'JetBrains Mono', size: 9 },
+            maxTicksLimit: 10,
+            maxRotation: 0,
+          },
+          grid: { color: 'rgba(237,231,212,0.05)' },
+        },
+        y: {
+          ticks: {
+            color: 'rgba(107,100,84,0.8)',
+            font: { family: 'JetBrains Mono', size: 9 },
+            callback: v => '$' + v.toFixed(0),
+          },
+          grid: { color: 'rgba(237,231,212,0.05)' },
+        }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════
 function showTab(name, el) {
@@ -1176,6 +1436,7 @@ function showTab(name, el) {
   el.classList.add('active');
   if (name === 'news' && !newsCache.length) loadNews();
   if (name === 'earnings') loadEarnings();
+  if (name === 'forecast') initForecast();
 }
 
 // ═══════════════════════════════════════════════════════
