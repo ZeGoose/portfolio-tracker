@@ -1227,22 +1227,53 @@ function selectForecastTicker(ticker) {
 async function loadForecast(ticker) {
   const container = document.getElementById('forecast-container');
 
-  // Show cached result instantly
   if (forecastCache[ticker]) {
     renderForecast(forecastCache[ticker]);
     return;
   }
 
-  container.innerHTML = `<div class="forecast-loading">Fetching ${ticker} forecast from TimesFM…<br><span style="opacity:0.5;font-size:10px">First request may take 30–60s if the model is waking up</span></div>`;
+  container.innerHTML = `<div class="forecast-loading">Fetching ${ticker} price history…</div>`;
 
   try {
-    const res = await fetch(`${TIMESFM_URL}/forecast/${ticker}?days=30`);
-    if (!res.ok) throw new Error(`API error ${res.status}`);
-    const data = await res.json();
+    // Step 1: Fetch 2 years of daily candles from Finnhub in the browser
+    // (browser calls work fine — only server-to-server calls are blocked)
+    const now   = Math.floor(Date.now() / 1000);
+    const start = now - 730 * 24 * 3600;
+    const candleUrl = `https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=D&from=${start}&to=${now}&token=${FINNHUB_KEY}`;
+    const candleRes = await fetch(candleUrl);
+    const candleData = await candleRes.json();
+
+    if (candleData.s !== 'ok' || !candleData.c || candleData.c.length < 60) {
+      throw new Error(`Not enough price history for ${ticker} (${candleData.c?.length || 0} candles)`);
+    }
+
+    const dates  = candleData.t.map(t => new Date(t * 1000).toISOString().slice(0, 10));
+    const prices = candleData.c.map(p => parseFloat(p));
+
+    container.innerHTML = `<div class="forecast-loading">Running TimesFM forecast for ${ticker}…<br><span style="opacity:0.5;font-size:10px">This takes 5–15 seconds</span></div>`;
+
+    // Step 2: POST the price data to TimesFM — no IP blocking issue
+    const fRes = await fetch(`${TIMESFM_URL}/forecast`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticker, dates, prices, days: 30 })
+    });
+
+    if (!fRes.ok) {
+      const err = await fRes.json();
+      throw new Error(err.detail || `API error ${fRes.status}`);
+    }
+
+    const data = await fRes.json();
     forecastCache[ticker] = data;
     renderForecast(data);
+
   } catch(e) {
-    container.innerHTML = `<div class="forecast-error">Could not load forecast for ${ticker}.<br>${e.message}<br><br><button onclick="loadForecast('${ticker}')" style="font-family:var(--mono);font-size:10px;color:var(--gold);background:transparent;border:1px solid var(--gold-dim);padding:6px 16px;border-radius:3px;cursor:pointer;margin-top:8px">↻ Try again</button></div>`;
+    container.innerHTML = `<div class="forecast-error">Could not load forecast for ${ticker}.<br>${e.message}<br><br>
+      <button onclick="delete forecastCache['${ticker}']; loadForecast('${ticker}')"
+        style="font-family:var(--mono);font-size:10px;color:var(--gold);background:transparent;border:1px solid var(--gold-dim);padding:6px 16px;border-radius:3px;cursor:pointer;margin-top:8px">
+        ↻ Try again
+      </button></div>`;
   }
 }
 
