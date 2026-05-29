@@ -402,7 +402,21 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .forecast-chart-wrap { padding:12px 20px; }
 .forecast-loading { font-family:var(--mono); font-size:11px; color:var(--cream-3); padding:80px; text-align:center; animation:blink 1.4s ease infinite; }
 .forecast-error { font-family:var(--mono); font-size:11px; color:var(--red); padding:40px; text-align:center; }
-.forecast-disclaimer { font-family:var(--mono); font-size:9px; color:var(--cream-3); opacity:0.4; padding:0 20px 16px; letter-spacing:0.04em; }
+.forecast-disclaimer { font-family:var(--mono); font-size:9px; color:var(--cream-3); opacity:0.4; padding:0 20px 14px; letter-spacing:0.04em; }
+.ai-outlook { margin-top:12px; border:1px solid var(--border); border-radius:3px; overflow:hidden; animation:up 0.4s ease 0.2s both; }
+.ai-outlook-head { background:var(--ink-3); padding:10px 16px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
+.ai-outlook-label { font-family:var(--mono); font-size:8px; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-dim); }
+.ai-outlook-badge { font-family:var(--mono); font-size:8px; letter-spacing:0.08em; padding:2px 8px; border-radius:2px; margin-left:auto; }
+.ob-bullish { background:var(--green-bg); color:var(--green); border:1px solid rgba(78,153,104,0.2); }
+.ob-bearish { background:var(--red-bg); color:var(--red); border:1px solid rgba(194,91,91,0.2); }
+.ob-neutral { background:var(--ink-4); color:var(--cream-3); border:1px solid var(--border-2); }
+.ob-caution { background:var(--l2-bg); color:var(--l2-color); border:1px solid var(--l2-border); }
+.ai-outlook-body { padding:14px 16px; background:var(--ink-2); }
+.ai-outlook-summary { font-family:var(--serif); font-size:16px; color:var(--cream); line-height:1.65; margin-bottom:10px; }
+.ai-outlook-factors { display:flex; flex-direction:column; gap:5px; }
+.ai-factor { display:flex; align-items:flex-start; gap:8px; font-size:12px; color:var(--cream-2); line-height:1.5; }
+.ai-factor-icon { flex-shrink:0; font-size:13px; margin-top:1px; }
+.ai-outlook-loading { font-family:var(--mono); font-size:10px; color:var(--cream-3); padding:16px; text-align:center; animation:blink 1.4s ease infinite; }
 #panel-earnings { padding:28px 32px 60px; }
 .earnings-intro { font-family:var(--mono); font-size:10px; color:var(--cream-3); margin-bottom:24px; letter-spacing:0.04em; }
 .earnings-calendar { display:flex; flex-direction:column; gap:1px; }
@@ -1299,6 +1313,15 @@ function renderForecast(data) {
 
   // Draw chart with Chart.js
   drawForecastChart(data);
+
+  // Add AI outlook section below the card
+  const aiWrap = document.createElement('div');
+  aiWrap.id = 'ai-outlook-wrap';
+  aiWrap.innerHTML = `<div class="ai-outlook"><div class="ai-outlook-head"><span class="ai-outlook-label">AI adjusted outlook</span><span style="font-family:var(--mono);font-size:9px;color:var(--cream-3);margin-left:auto">Gemini · news + earnings + macro</span></div><div class="ai-outlook-loading">Analysing news, earnings calendar and market conditions…</div></div>`;
+  document.getElementById('forecast-container').appendChild(aiWrap);
+
+  // Run Gemini analysis
+  buildAIOutlook(data);
 }
 
 function drawForecastChart(data) {
@@ -1431,6 +1454,125 @@ function _drawChart(data) {
       }
     }
   });
+}
+
+// ═══════════════════════════════════════════════════════
+// AI ADJUSTED OUTLOOK — Gemini hybrid forecast
+// ═══════════════════════════════════════════════════════
+const aiOutlookCache = {};
+
+async function buildAIOutlook(forecastData) {
+  const ticker = forecastData.ticker;
+  const wrap   = document.getElementById('ai-outlook-wrap');
+  if (!wrap) return;
+
+  // Use cache if available
+  if (aiOutlookCache[ticker]) {
+    renderAIOutlook(aiOutlookCache[ticker]);
+    return;
+  }
+
+  try {
+    // 1. Fetch recent news headlines for this ticker
+    const now  = new Date(), past2d = new Date(now - 2*24*3600*1000);
+    const fmt  = d => d.toISOString().slice(0,10);
+    let headlines = '';
+    try {
+      const nr = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${fmt(past2d)}&to=${fmt(now)}&token=${FINNHUB_KEY}`);
+      const nd = await nr.json();
+      headlines = (nd||[]).slice(0,6).map(a => a.headline).filter(Boolean).join(' | ');
+    } catch(e) {}
+
+    // 2. Check earnings proximity
+    const earningsAlert = PORTFOLIO.find(p => p.ticker === ticker);
+    const spyPx  = document.getElementById('ps-spy')?.textContent || '—';
+    const spyChg = document.getElementById('ps-spy-chg')?.textContent || '—';
+    const zarChg = document.getElementById('ps-zar-chg')?.textContent || '—';
+
+    // 3. Build Gemini prompt
+    const prompt = `You are a financial analyst giving a concise adjusted outlook for ${ticker} stock.
+
+TIMESFM PATTERN FORECAST:
+- Current price: $${forecastData.current_price}
+- 30-day forecast: $${forecastData.forecast_30d}
+- Pattern signal: ${forecastData.trend} (${forecastData.pct_change > 0 ? '+' : ''}${forecastData.pct_change.toFixed(1)}%)
+- Confidence range: $${forecastData.forecast.low[forecastData.forecast.low.length-1].toFixed(2)} – $${forecastData.forecast.high[forecastData.forecast.high.length-1].toFixed(2)}
+
+MARKET CONTEXT:
+- S&P 500: ${spyPx} (${spyChg})
+- USD/ZAR: ${zarChg}
+
+RECENT NEWS HEADLINES (last 48 hours):
+${headlines || 'No specific news found in last 48 hours.'}
+
+Respond ONLY in valid JSON, no markdown, no backticks:
+{
+  "adjusted_signal": "bullish|bearish|neutral|caution",
+  "summary": "One sharp sentence. What should the investor think about this stock right now combining the pattern forecast with news and macro context. Be direct and specific.",
+  "factors": [
+    {"icon": "📈", "text": "One factor supporting or opposing the forecast"},
+    {"icon": "⚠️", "text": "One risk or uncertainty to watch"},
+    {"icon": "📅", "text": "One timing consideration — earnings, macro event, or market regime"}
+  ]
+}
+
+Rules:
+- adjusted_signal: bullish if pattern+news both positive, bearish if both negative, caution if mixed signals or earnings soon, neutral if unclear
+- summary: max 25 words, specific to this stock today
+- factors: exactly 3, each max 15 words, concrete not generic`;
+
+    const res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 400 }
+      })
+    });
+    const gData = await res.json();
+    const raw   = gData?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!raw) throw new Error('No Gemini response');
+    const outlook = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    aiOutlookCache[ticker] = outlook;
+    renderAIOutlook(outlook);
+
+  } catch(e) {
+    const wrap = document.getElementById('ai-outlook-wrap');
+    if (wrap) wrap.innerHTML = `<div class="ai-outlook"><div class="ai-outlook-head"><span class="ai-outlook-label">AI adjusted outlook</span></div><div class="ai-outlook-loading" style="animation:none;opacity:0.5">Analysis unavailable — ${e.message}</div></div>`;
+  }
+}
+
+function renderAIOutlook(outlook) {
+  const wrap = document.getElementById('ai-outlook-wrap');
+  if (!wrap) return;
+
+  const badgeCls = {
+    bullish: 'ob-bullish', bearish: 'ob-bearish',
+    neutral: 'ob-neutral', caution: 'ob-caution'
+  };
+  const badgeTxt = {
+    bullish: '↑ Adjusted Bullish', bearish: '↓ Adjusted Bearish',
+    neutral: '→ Adjusted Neutral', caution: '⚡ Use Caution'
+  };
+  const sig = outlook.adjusted_signal || 'neutral';
+
+  wrap.innerHTML = `
+    <div class="ai-outlook">
+      <div class="ai-outlook-head">
+        <span class="ai-outlook-label">AI adjusted outlook</span>
+        <span class="ai-outlook-badge ${badgeCls[sig]}">${badgeTxt[sig]}</span>
+      </div>
+      <div class="ai-outlook-body">
+        <div class="ai-outlook-summary">${outlook.summary}</div>
+        <div class="ai-outlook-factors">
+          ${(outlook.factors||[]).map(f => `
+            <div class="ai-factor">
+              <span class="ai-factor-icon">${f.icon}</span>
+              <span>${f.text}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════
