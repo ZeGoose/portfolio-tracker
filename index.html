@@ -395,11 +395,11 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .signal-bullish { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; padding:4px 12px; border-radius:2px; background:var(--green-bg); color:var(--green); border:1px solid rgba(78,153,104,0.25); }
 .signal-bearish { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; padding:4px 12px; border-radius:2px; background:var(--red-bg); color:var(--red); border:1px solid rgba(194,91,91,0.25); }
 .signal-neutral { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; padding:4px 12px; border-radius:2px; background:var(--ink-3); color:var(--cream-3); border:1px solid var(--border-2); }
-.forecast-meta { display:flex; gap:20px; padding:12px 20px; border-bottom:1px solid var(--border); background:var(--ink-3); }
+.forecast-meta { display:flex; gap:20px; padding:10px 18px; border-bottom:1px solid var(--border); background:var(--ink-3); flex-wrap:wrap; }
 .forecast-meta-item { display:flex; flex-direction:column; gap:3px; }
 .forecast-meta-label { font-family:var(--mono); font-size:8px; letter-spacing:0.12em; text-transform:uppercase; color:var(--cream-3); }
 .forecast-meta-val { font-family:var(--serif); font-size:18px; color:var(--cream); }
-.forecast-chart-wrap { padding:20px; }
+.forecast-chart-wrap { padding:12px 20px; }
 .forecast-loading { font-family:var(--mono); font-size:11px; color:var(--cream-3); padding:80px; text-align:center; animation:blink 1.4s ease infinite; }
 .forecast-error { font-family:var(--mono); font-size:11px; color:var(--red); padding:40px; text-align:center; }
 .forecast-disclaimer { font-family:var(--mono); font-size:9px; color:var(--cream-3); opacity:0.4; padding:0 20px 16px; letter-spacing:0.04em; }
@@ -1290,7 +1290,7 @@ function renderForecast(data) {
         </div>
       </div>
       <div class="forecast-chart-wrap">
-        <canvas id="forecast-chart" height="280"></canvas>
+        <div style="position:relative;height:200px;"><canvas id="forecast-chart"></canvas></div>
       </div>
       <div class="forecast-disclaimer">
         TimesFM 1.0 · Pattern-based forecast · Does not account for earnings, news, or macro events · Not financial advice · Generated ${new Date(data.generated_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
@@ -1395,6 +1395,7 @@ function _drawChart(data) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
