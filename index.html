@@ -299,6 +299,20 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .no-alerts-sub { font-family:var(--mono); font-size:10px; color:var(--cream-3); letter-spacing:0.06em; }
 .wl-section { margin-top:28px; }
 .wl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:7px; margin-top:13px; }
+.wl-card { cursor:pointer; transition:all 0.15s; }
+.wl-card:hover { border-color:var(--gold-dim) !important; }
+.wl-info-panel { display:none; background:var(--ink-2); border:1px solid var(--border-2); border-radius:3px; padding:16px 18px; margin-top:10px; animation:up 0.25s ease both; }
+.wl-info-panel.open { display:block; }
+.wl-info-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
+.wl-info-name { font-family:var(--serif); font-size:20px; color:var(--cream); }
+.wl-info-ticker { font-family:var(--mono); font-size:10px; color:var(--gold); background:var(--gold-faint); padding:3px 9px; border-radius:2px; border:1px solid rgba(191,142,58,0.2); }
+.wl-info-sector { font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--cream-3); margin-bottom:8px; }
+.wl-info-what { font-size:13px; color:var(--cream-2); line-height:1.65; margin-bottom:10px; }
+.wl-info-why { display:flex; gap:8px; align-items:flex-start; padding:10px 12px; background:var(--ink-3); border-radius:2px; border-left:2px solid var(--gold-dim); }
+.wl-info-why-label { font-family:var(--mono); font-size:8px; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold-dim); flex-shrink:0; margin-top:1px; }
+.wl-info-why-text { font-size:12px; color:var(--cream-2); line-height:1.6; }
+.wl-info-close { font-family:var(--mono); font-size:9px; color:var(--cream-3); cursor:pointer; padding:2px 8px; border:1px solid var(--border-2); border-radius:2px; transition:all 0.15s; flex-shrink:0; }
+.wl-info-close:hover { color:var(--gold); border-color:var(--gold-dim); }
 .wl-card { background:var(--ink-2); border:1px solid var(--border); border-radius:3px; padding:12px 13px; }
 .wl-card.t1{border-color:var(--l1-border);background:var(--l1-bg);}
 .wl-card.t2{border-color:var(--l2-border);background:var(--l2-bg);}
@@ -610,6 +624,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
   <div class="wl-section">
     <div class="sh" style="margin-bottom:13px"><div class="sh-title">Full watchlist — drawdown from 52-week high</div></div>
     <div class="wl-grid" id="wl-grid"></div>
+    <div class="wl-info-panel" id="wl-info-panel"></div>
   </div>
 </div>
 
@@ -689,6 +704,9 @@ const WATCHLIST = [
   { name:'Datadog',                       ticker:'DDOG' },
   { name:'Bloom Energy',                  ticker:'BE'   },
   { name:'Equinix',                       ticker:'EQIX' },
+  { name:'Eaton Corporation',             ticker:'ETN'  },
+  { name:'Freeport-McMoRan',             ticker:'FCX'  },
+  { name:'Cameco',                        ticker:'CCJ'  },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -822,6 +840,85 @@ function renderTopbarAlerts(){
   show('ap1','ap1-wrap',c[1],'watch'); show('ap2','ap2-wrap',c[2],'consider'); show('ap3','ap3-wrap',c[3],'must buy');
 }
 
+// ═══════════════════════════════════════════════════════
+// COMPANY KNOWLEDGE BASE
+// ═══════════════════════════════════════════════════════
+const COMPANY_INFO = {
+  // Portfolio
+  'AAPL': { sector:'Consumer Technology', what:'Apple designs and sells iPhones, Macs, iPads, wearables, and services. The App Store, iCloud, and Apple Intelligence are its fastest-growing revenue streams.', why:'2.5 billion active devices create an unmatched ecosystem moat. Switching cost is enormous. Services revenue is high-margin and recurring — the market still undervalues this.' },
+  'AMZN': { sector:'E-Commerce / Cloud', what:'Amazon operates the world's largest e-commerce platform, AWS cloud infrastructure, Prime subscription, and an advertising business growing at 20%+ annually.', why:'AWS alone is worth more than the entire company's market cap by some estimates. The advertising business is a hidden gem. Three separate trillion-dollar businesses in one stock.' },
+  'GOOGL': { sector:'Digital Advertising / AI', what:'Alphabet owns Google Search, YouTube, Google Cloud, Waymo, and DeepMind. Search and YouTube generate the majority of revenue through advertising.', why:'Google processes 8.5 billion searches per day — an unassailable moat. Cloud growing 63% and AI capabilities (Gemini) are best-in-class. Trading at a discount to peers.' },
+  'MSFT': { sector:'Enterprise Software / Cloud', what:'Microsoft makes Windows, Office, Azure cloud, LinkedIn, GitHub, and owns 49% of OpenAI. Azure is the second-largest cloud platform globally.', why:'AI ARR reached $37B growing 123% year-on-year. Every enterprise runs on Microsoft software — switching costs are enormous. The OpenAI relationship gives it an AI lead no competitor can easily replicate.' },
+  'NVDA': { sector:'Semiconductors / AI', what:'Nvidia designs GPUs that power AI training and inference. The H100 and B200 chips are the picks and shovels of the AI revolution. CUDA software ecosystem locks in developers.', why:'Every major AI model trains on Nvidia hardware. The software moat (CUDA) means even if a competitor matches the chip, switching costs make it irrelevant. No credible competitor at scale.' },
+  'V':    { sector:'Financial Services', what:'Visa operates the world's largest payment network — a toll road on global commerce. It processes over $15 trillion in payments annually without taking on credit risk.', why:'Pure network effect moat. More merchants accept Visa = more cardholders want it = more merchants accept it. Asset-light model with 50%+ operating margins. Buffett's kind of business.' },
+  'META': { sector:'Social Media / AI', what:'Meta owns Facebook, Instagram, WhatsApp, and is building the metaverse via Reality Labs. Its AI recommendation engine drives advertising revenue.', why:'3.3 billion daily active users across its family of apps. The advertising business is a cash machine. AI investments are paying off — engagement and ad pricing both improving.' },
+  'LLY':  { sector:'Pharmaceuticals', what:'Eli Lilly makes Mounjaro and Zepbound (GLP-1 weight loss drugs), Trulicity (diabetes), and a strong oncology pipeline. GLP-1 drugs are reshaping healthcare.', why:'GLP-1 drugs are the biggest pharmaceutical category in history. Demand massively exceeds supply. Manufacturing capacity is being built out rapidly. The obesity epidemic is a multi-decade tailwind.' },
+  'SYK':  { sector:'Medical Devices', what:'Stryker makes orthopaedic implants, surgical robots (Mako), neurotechnology, and medical equipment. A quiet compounder in healthcare infrastructure.', why:'Ageing population drives structural demand for hip, knee, and spine surgery. Mako robotic surgery is gaining share. Stryker has compounded earnings at 15%+ for two decades.' },
+  'CRWD': { sector:'Cybersecurity', what:'CrowdStrike provides cloud-native endpoint security, threat intelligence, and identity protection. Falcon platform protects over 29,000 enterprise customers.', why:'Cybersecurity spend is non-discretionary and growing. AI is making attacks more sophisticated, which paradoxically drives more spend to CrowdStrike. Dollar-based net retention above 120% means existing customers keep buying more.' },
+  // Watchlist
+  'AMD':  { sector:'Semiconductors', what:'Advanced Micro Devices designs CPUs and GPUs for data centres, PCs, and gaming. The MI300 series competes directly with Nvidia in AI inference workloads.', why:'The credible number two to Nvidia. Hyperscalers want supply chain diversification — AMD is the only viable alternative. If Nvidia ever stumbles, AMD captures the overflow immediately.' },
+  'CSCO': { sector:'Networking', what:'Cisco makes the routers, switches, and security hardware that run enterprise and data centre networks. Moving toward software and subscription revenue.', why:'Every enterprise network runs on Cisco. Sticky recurring revenue as it transitions to software. AI is driving massive networking upgrades that benefit Cisco's core switching business.' },
+  'SMR':  { sector:'Nuclear Energy', what:'NuScale Power designs small modular reactors (SMRs) — compact, factory-built nuclear plants. A fraction of the size of traditional reactors but producing clean baseload power.', why:'If SMRs achieve commercial scale, they solve the always-on clean power problem for data centres without needing large land or grid infrastructure. High risk, enormous upside if the technology delivers.' },
+  'AVGO': { sector:'Semiconductors', what:'Broadcom designs custom AI chips (ASICs) for Google, Meta, and Apple, plus networking semiconductors and infrastructure software. Nearly $2 trillion market cap.', why:'Google and Meta are paying Broadcom billions to design custom AI chips that avoid Nvidia dependency. Switching cost moat — once a hyperscaler's AI infrastructure is built on Broadcom silicon, they cannot easily leave.' },
+  'TSM':  { sector:'Semiconductor Manufacturing', what:'TSMC is the world's largest contract chip manufacturer. It makes chips for Apple, Nvidia, AMD, and virtually every major semiconductor designer. No one else operates at its scale or node leadership.', why:'The most critical chokepoint in the entire technology supply chain. Without TSMC, there are no iPhones, no Nvidia GPUs, no AI. A true monopoly at the cutting edge of chip fabrication.' },
+  'BKNG': { sector:'Travel / Technology', what:'Booking Holdings owns Booking.com, Priceline, Kayak, and OpenTable. The largest online travel agency in the world by bookings volume.', why:'Travel is a secular growth story. Booking has a network moat — more listings attract more travellers attract more listings. AI is improving its search and personalisation, driving higher conversion.' },
+  'UBER': { sector:'Mobility / Logistics', what:'Uber operates ride-sharing, food delivery (Uber Eats), and freight logistics in 70+ countries. Moving toward autonomous vehicles via partnerships with Waymo.', why:'Network effect moat in every city it operates. The autonomous vehicle future makes Uber's existing driver network a transition asset. Profitability improving significantly as the business matures.' },
+  'ASML': { sector:'Semiconductor Equipment', what:'ASML makes EUV lithography machines — the only machines in the world capable of manufacturing the most advanced chips. Every leading-edge chip goes through an ASML machine.', why:'The most irreplaceable monopoly in technology. No chip can be made at 5nm or below without ASML's machines. Export restrictions and geopolitics make this supply even more constrained.' },
+  'NBIS': { sector:'AI Infrastructure / Cloud', what:'Nebius Group is a European AI-native cloud provider spun out of Yandex, offering GPU compute and AI infrastructure services. Building data centres in Finland and Europe.', why:'Europe needs its own AI cloud infrastructure independent of US hyperscalers. Nebius is positioned as the European alternative. Early stage and high risk but the addressable market is enormous.' },
+  'UFO':  { sector:'Space ETF', what:'Procure Space ETF holds a basket of companies with significant space industry revenue — satellite operators, launch companies, defence contractors with space exposure.', why:'Pre-SpaceX IPO positioning. Space is the next infrastructure frontier. The ETF gives diversified exposure without betting on a single company before the major names go public.' },
+  'UFOX': { sector:'Connectivity ETF', what:'Defiance Connective Technologies ETF holds companies in 5G, satellite internet, and connectivity infrastructure. Includes exposure to space-adjacent technology businesses.', why:'Connectivity infrastructure is the backbone of AI deployment at scale. The ETF captures the theme without single-stock risk, with some SpaceX ecosystem adjacency.' },
+  'MU':   { sector:'Memory Semiconductors', what:'Micron Technology makes DRAM and NAND memory chips — the RAM that every AI server, smartphone, and computer runs on. The third largest memory chip maker globally.', why:'AI servers require 6-8x more memory than traditional servers. Micron has locked in long-term supply agreements covering 60-70% of server DDR5 volumes through 2029. A supply shortage is building.' },
+  'KWEB': { sector:'China Internet ETF', what:'KraneShares China Internet ETF holds Alibaba, Tencent, Meituan, JD.com, and other major Chinese internet companies. Trades on US exchanges in dollars.', why:'Chinese internet companies trade at a fraction of US equivalents. Alibaba at 10x earnings vs Amazon at 35x. A trade de-escalation catalyst could re-rate the entire sector rapidly.' },
+  'VRT':  { sector:'Data Centre Infrastructure', what:'Vertiv makes thermal management, power distribution, and cooling systems for data centres. Co-developing 800V DC power architecture directly with Nvidia.', why:'AI servers run hotter and denser than anything before. Cooling is not optional — it is physics. Vertiv is the picks-and-shovels play on data centre density growth. Deeply embedded with every major operator.' },
+  'VST':  { sector:'Power Generation', what:'Vistra is the largest unregulated power producer in the US, operating nuclear and natural gas assets. Has direct long-term power purchase agreements with Amazon and Meta.', why:'Locked-in contracts with hyperscalers mean Vistra's revenue is secured regardless of spot power prices. As power scarcity increases, the value of those contracts becomes extraordinary.' },
+  'GLW':  { sector:'Optical Fibre / Materials', what:'Corning makes optical fibre, speciality glass (iPhone screens, telescope mirrors), and display technologies. Just signed a multiyear AI partnership with Nvidia for optical connectivity.', why:'Every AI data centre is connected by optical fibre. As GPU cluster density increases, fibre demand grows exponentially. Corning has a near-monopoly on the most advanced optical fibre products.' },
+  'DDOG': { sector:'Cloud Monitoring / AI', what:'Datadog provides observability, monitoring, and security for cloud infrastructure. Used by engineering teams to watch their applications and AI workloads in real time.', why:'As AI workloads become more complex and critical, monitoring them becomes non-negotiable. Datadog's platform becomes more valuable as infrastructure gets more complicated. High switching cost SaaS.' },
+  'BE':   { sector:'Fuel Cells / Energy', what:'Bloom Energy makes fuel cell power systems that generate electricity on-site from natural gas, biogas, or hydrogen — without connecting to the grid.', why:'Grid connection wait times in the US are now 5 years. Bloom bypasses the grid entirely, delivering power to data centres in 12-18 months. Oracle signed a 2.8 gigawatt deal. The speed advantage is the moat.' },
+  'EQIX': { sector:'Data Centre REIT', what:'Equinix is the world's largest data centre REIT, operating 260+ facilities in 70 countries. Hyperscalers, enterprises, and cloud providers all pay rent to Equinix.', why:'Data centre vacancy at record-low 1.6%. Equinix can charge whatever it wants for space. Rental rates for large-scale builds up 19% in one year. The landlord wins when supply is constrained.' },
+  'ETN':  { sector:'Electrical Equipment', what:'Eaton Corporation makes power management equipment, transformers, circuit breakers, and electrical infrastructure. Every grid upgrade and data centre build uses Eaton equipment.', why:'Transformer lead times are now 4 years. Every energy solution — nuclear, gas, renewables — requires Eaton equipment to connect to the grid. The picks-and-shovels play on every energy technology simultaneously.' },
+  'FCX':  { sector:'Copper Mining', what:'Freeport-McMoRan is the world's largest publicly traded copper producer, with mines in the Americas and Indonesia. Copper is the essential conductor in all electrical infrastructure.', why:'A single 100MW data centre uses 3,000 tonnes of copper. The IEA projects copper mines will only meet 70% of 2035 demand. A supply gap is building. When copper prices spike, FCX moves first and fastest.' },
+  'CCJ':  { sector:'Uranium Mining', what:'Cameco is the largest Western uranium producer, supplying fuel to nuclear power plants globally. As nuclear energy makes a comeback, Cameco supplies the fuel.', why:'The nuclear renaissance is underway — Constellation Energy alone is restarting closed plants. Every new reactor needs uranium. Cameco is the direct leveraged play on the nuclear thesis, amplifying your CEG position.' },
+};
+
+let activeWlInfo = null;
+
+function toggleWlInfo(ticker) {
+  // Close if same ticker clicked again
+  if (activeWlInfo === ticker) {
+    activeWlInfo = null;
+    document.getElementById('wl-info-panel').classList.remove('open');
+    return;
+  }
+  activeWlInfo = ticker;
+  const info = COMPANY_INFO[ticker];
+  const all  = [...PORTFOLIO, ...WATCHLIST];
+  const stock = all.find(s => s.ticker === ticker);
+
+  const panel = document.getElementById('wl-info-panel');
+  if (!info) {
+    panel.innerHTML = `<div style="font-family:var(--mono);font-size:11px;color:var(--cream-3);">No information available for ${ticker}.</div>`;
+  } else {
+    panel.innerHTML = `
+      <div class="wl-info-head">
+        <div>
+          <div class="wl-info-name">${stock?.name || ticker}</div>
+          <div class="wl-info-sector">${info.sector}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="wl-info-ticker">${ticker}</span>
+          <span class="wl-info-close" onclick="toggleWlInfo('${ticker}')">✕ Close</span>
+        </div>
+      </div>
+      <div class="wl-info-what">${info.what}</div>
+      <div class="wl-info-why">
+        <span class="wl-info-why-label">Why own it</span>
+        <span class="wl-info-why-text">${info.why}</span>
+      </div>`;
+  }
+  panel.classList.add('open');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 function renderAlerts(){
   renderTopbarAlerts();
   const all=[...PORTFOLIO.map(p=>({...p,inPort:true})),...WATCHLIST.map(w=>({...w,inPort:false}))];
@@ -837,7 +934,7 @@ function renderAlerts(){
     el.textContent = reason;
     el.classList.remove('why-loading');
   });
-  document.getElementById('wl-grid').innerHTML=all.map(s=>{const px=prices[s.ticker],lv=alertLevel(s.ticker),drop=drawdown(s.ticker);return`<div class="wl-card ${lv?'t'+lv:''}"><div class="wl-name">${s.name}</div><div class="wl-ticker">${s.ticker}${s.inPort?' · portfolio':' · watchlist'}</div><div class="wl-price">${px?$(px.price):'<span class="loading-val">—</span>'}</div><div class="wl-drop ${drop!=null?cc(drop):'neu'}">${drop!=null?pct(drop)+' from high':'—'}</div></div>`;}).join('');
+  document.getElementById('wl-grid').innerHTML=all.map(s=>{const px=prices[s.ticker],lv=alertLevel(s.ticker),drop=drawdown(s.ticker);return`<div class="wl-card ${lv?'t'+lv:''}" onclick="toggleWlInfo('${s.ticker}')"><div class="wl-name">${s.name}</div><div class="wl-ticker">${s.ticker}${s.inPort?' · portfolio':' · watchlist'}</div><div class="wl-price">${px?$(px.price):'<span class="loading-val">—</span>'}</div><div class="wl-drop ${drop!=null?cc(drop):'neu'}">${drop!=null?pct(drop)+' from high':'—'}</div></div>`;}).join('');
 }
 
 // ═══════════════════════════════════════════════════════
