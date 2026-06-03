@@ -739,20 +739,34 @@ async function fetchQuote(ticker) {
 async function init() {
   document.getElementById('refresh-btn').disabled = true;
   setStatus('info','Fetching live prices…');
-  const all = [...PORTFOLIO, ...WATCHLIST.filter(w => !PORTFOLIO.find(p=>p.ticker===w.ticker))];
-  for (const s of all) {
+
+  // Fetch portfolio first — these are the most important
+  for (const s of PORTFOLIO) {
     try {
       prices[s.ticker] = await fetchQuote(s.ticker);
-      renderPortfolio(); renderAlerts();
+      renderPortfolio();
     } catch(e) { console.warn('Price fail:',s.ticker); }
-    await sleep(200);
+    await sleep(220);
   }
+
+  // Render portfolio immediately with what we have
   clearStatus();
-  renderPortfolio(); renderAlerts(); renderTopbarAlerts();
+  renderPortfolio();
   const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   document.getElementById('updated').textContent = 'Updated ' + t;
-  document.getElementById('alert-updated').textContent = 'Checked ' + t;
   document.getElementById('refresh-btn').disabled = false;
+
+  // Then fetch watchlist in background — slower, doesn't block portfolio
+  for (const s of WATCHLIST.filter(w => !PORTFOLIO.find(p=>p.ticker===w.ticker))) {
+    try {
+      prices[s.ticker] = await fetchQuote(s.ticker);
+      renderAlerts();
+    } catch(e) { console.warn('Price fail:',s.ticker); }
+    await sleep(300); // slower to stay within rate limit
+  }
+
+  renderAlerts(); renderTopbarAlerts();
+  document.getElementById('alert-updated').textContent = 'Checked ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
 
 // ═══════════════════════════════════════════════════════
