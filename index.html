@@ -397,6 +397,40 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .news-loading { font-family:var(--mono); font-size:11px; color:var(--cream-3); padding:60px; text-align:center; animation:blink 1.4s ease infinite; }
 .news-section-label { font-family:var(--mono); font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--cream-3); margin:16px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
 
+/* ── PORTFOLIO SWITCHER ── */
+.port-switcher { display:flex; gap:6px; margin-bottom:20px; }
+.port-switch-btn { font-family:var(--mono); font-size:10px; letter-spacing:0.08em; padding:6px 16px; border-radius:3px; border:1px solid var(--border-2); background:transparent; color:var(--cream-2); cursor:pointer; transition:all 0.2s; }
+.port-switch-btn:hover { border-color:var(--gold-dim); color:var(--cream); }
+.port-switch-btn.active { background:var(--ink-3); border-color:var(--gold); color:var(--gold); }
+.port-switch-label { font-family:var(--serif); font-size:11px; color:var(--cream-3); margin-top:1px; }
+/* ── OVERVIEW DASHBOARD ── */
+.ov-dashboard { margin-bottom:28px; }
+.ov-hero { background:var(--ink-2); border:1px solid var(--border); border-radius:4px; padding:24px 28px; margin-bottom:12px; }
+.ov-hero-label { font-family:var(--mono); font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--cream-3); margin-bottom:8px; }
+.ov-hero-val { font-family:var(--serif); font-size:42px; color:var(--cream); letter-spacing:-0.01em; margin-bottom:6px; }
+.ov-hero-pl { font-family:var(--mono); font-size:12px; margin-bottom:16px; }
+.ov-hero-stats { display:flex; gap:28px; padding-top:16px; border-top:1px solid var(--border); }
+.ov-stat { display:flex; flex-direction:column; gap:3px; }
+.ov-stat-label { font-family:var(--mono); font-size:8px; letter-spacing:0.1em; text-transform:uppercase; color:var(--cream-3); }
+.ov-stat-val { font-family:var(--serif); font-size:16px; color:var(--cream); }
+.ov-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ov-card { background:var(--ink-2); border:1px solid var(--border); border-radius:4px; padding:16px 18px; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
+.ov-card::after { content:'→'; position:absolute; right:14px; bottom:14px; font-family:var(--mono); font-size:11px; color:var(--cream-3); opacity:0; transition:opacity 0.2s; }
+.ov-card:hover { border-color:var(--gold-dim); }
+.ov-card:hover::after { opacity:1; }
+.ov-card.active { border-color:var(--gold); background:var(--ink-3); }
+.ov-card.active::after { content:'↓ viewing'; opacity:1; color:var(--gold); font-size:8px; letter-spacing:0.1em; }
+.ov-card-num { font-family:var(--mono); font-size:8px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cream-3); margin-bottom:4px; }
+.ov-card-name { font-family:var(--serif); font-size:17px; color:var(--cream); margin-bottom:2px; }
+.ov-card-sub { font-family:var(--mono); font-size:9px; color:var(--cream-3); margin-bottom:12px; }
+.ov-card-val { font-family:var(--serif); font-size:24px; color:var(--cream); margin-bottom:3px; }
+.ov-card-pl { font-family:var(--mono); font-size:10px; }
+.ov-card-divider { border:none; border-top:1px solid var(--border); margin:10px 0; }
+.ov-card-positions { font-family:var(--mono); font-size:9px; color:var(--cream-3); }
+.ov-card-best { font-family:var(--mono); font-size:9px; color:var(--green); margin-top:2px; }
+.port-note { font-family:var(--mono); font-size:9px; color:var(--l2-color); background:var(--l2-bg); border:1px solid var(--l2-border); border-radius:2px; padding:4px 10px; margin-bottom:16px; display:none; }
+.port-note.show { display:block; }
+
 /* ── FORECAST PANEL ── */
 #panel-forecast { padding:28px 32px 60px; }
 .forecast-pill { font-family:var(--serif); font-size:13px; padding:5px 14px; border:1px solid var(--border-2); border-radius:3px; background:transparent; color:var(--cream-dim,var(--cream-2)); cursor:pointer; transition:all 0.2s; }
@@ -572,6 +606,13 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 <!-- ══════════════════════════════════════════════ -->
 <div class="panel active" id="panel-portfolio">
   <div class="status" id="status"></div>
+  <!-- PORTFOLIO SWITCHER -->
+  <div class="port-switcher">
+    <button class="port-switch-btn active" id="sw-watcher" onclick="switchPortfolio('watcher')">The Watcher</button>
+    <button class="port-switch-btn" id="sw-travel" onclick="switchPortfolio('travel')">Travel Fund</button>
+  </div>
+  <div class="port-note" id="port-note" style="display:none"></div>
+
   <!-- MARKET PULSE STRIP -->
   <div class="pulse-strip" id="pulse-strip">
     <div class="ps-item"><div class="ps-label">USD / ZAR</div><div class="ps-val" id="ps-zar">—</div><div class="ps-chg neu" id="ps-zar-chg">—</div></div>
@@ -684,30 +725,40 @@ const PORTFOLIO = [
   { name:'CrowdStrike', ticker:'CRWD', shares: 7, cost:441.76 },
 ];
 
+const TRAVEL_FUND = [
+  { name:'Nvidia',           ticker:'NVDA', shares:2.0381, cost:180.95 },
+  { name:'Microsoft',        ticker:'MSFT', shares:0.5565, cost:413.27 },
+  { name:'Vanguard S&P 500', ticker:'VOO',  shares:1.2574, cost:607.62 },
+  { name:'Booking Holdings', ticker:'BKNG', shares:1.1886, cost:168.26 },
+];
+
+const PORTFOLIOS = {
+  watcher:  { label:'The Watcher',  sub:'Main portfolio · USD',  data: PORTFOLIO },
+  travel:   { label:'Travel Fund',  sub:'EasyEquities · USD',    data: TRAVEL_FUND },
+};
+
+let activePortfolioKey = 'watcher';
+function activePortfolio() { return PORTFOLIOS[activePortfolioKey].data; }
+
 const WATCHLIST = [
-  { name:'AMD',                           ticker:'AMD'  },
-  { name:'Cisco',                         ticker:'CSCO' },
-  { name:'NuScale Power',                 ticker:'SMR'  },
-  { name:'Broadcom',                      ticker:'AVGO' },
-  { name:'TSMC',                          ticker:'TSM'  },
-  { name:'Booking Holdings',              ticker:'BKNG' },
-  { name:'Uber',                          ticker:'UBER' },
-  { name:'ASML Holding',                  ticker:'ASML' },
-  { name:'Nebius Group',                  ticker:'NBIS' },
-  { name:'Procure Space ETF',             ticker:'UFO'  },
-  { name:'Defiance Connective Tech ETF',  ticker:'UFOX' },
-  { name:'Micron Technology',             ticker:'MU'   },
-  { name:'KraneShares China Internet ETF',ticker:'KWEB' },
-  { name:'Vertiv',                        ticker:'VRT'  },
-  { name:'Vistra',                        ticker:'VST'  },
-  { name:'Corning',                       ticker:'GLW'  },
-  { name:'Datadog',                       ticker:'DDOG' },
-  { name:'Bloom Energy',                  ticker:'BE'   },
-  { name:'GE Vernova',                    ticker:'GEV'  },
-  { name:'Equinix',                       ticker:'EQIX' },
-  { name:'Eaton Corporation',             ticker:'ETN'  },
-  { name:'Freeport-McMoRan',             ticker:'FCX'  },
-  { name:'Cameco',                        ticker:'CCJ'  },
+  { name:'AMD',                 ticker:'AMD'  },
+  { name:'Cisco',               ticker:'CSCO' },
+  { name:'NuScale Power',       ticker:'SMR'  },
+  { name:'Broadcom',            ticker:'AVGO' },
+  { name:'TSMC',                ticker:'TSM'  },
+  { name:'ASML Holding',        ticker:'ASML' },
+  { name:'Nebius Group',        ticker:'NBIS' },
+  { name:'Procure Space ETF',   ticker:'UFO'  },
+  { name:'Micron Technology',   ticker:'MU'   },
+  { name:'Vertiv',              ticker:'VRT'  },
+  { name:'Vistra',              ticker:'VST'  },
+  { name:'Datadog',             ticker:'DDOG' },
+  { name:'GE Vernova',          ticker:'GEV'  },
+  { name:'Equinix',             ticker:'EQIX' },
+  { name:'Eaton Corporation',   ticker:'ETN'  },
+  { name:'Freeport-McMoRan',    ticker:'FCX'  },
+  { name:'Cameco',              ticker:'CCJ'  },
+  { name:'Booking Holdings',    ticker:'BKNG' },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -781,6 +832,88 @@ async function fetchBatch(stocks) {
   }
 }
 
+// ═══════════════════════════════════════════════════════
+// PORTFOLIO SWITCHER
+// ═══════════════════════════════════════════════════════
+function switchPortfolio(key) {
+  activePortfolioKey = key;
+  // Update overview card states
+  document.querySelectorAll('.overview-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('ov-' + key).classList.add('active');
+  // Re-render with new portfolio
+  renderPortfolio();
+}
+
+function renderOverview() {
+  const fmt  = n => '$' + Math.abs(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const fmtS = n => '$' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const sign = n => n >= 0 ? '+' : '-';
+
+  // Per-portfolio cards
+  for (const [key, port] of Object.entries(PORTFOLIOS)) {
+    const data = port.data;
+    const have = data.filter(p => prices[p.ticker]);
+    const val  = have.reduce((s, p) => s + p.shares * prices[p.ticker].price, 0);
+    const cost = data.reduce((s, p) => s + p.shares * p.cost, 0);
+    const pl   = val - cost;
+    const plp  = cost > 0 ? pl / cost * 100 : 0;
+
+    // Best performer today
+    const best = have.filter(p => prices[p.ticker].change != null)
+      .sort((a, b) => (prices[b.ticker].changeP||0) - (prices[a.ticker].changeP||0))[0];
+
+    const valEl  = document.getElementById('ov-val-' + key);
+    const plEl   = document.getElementById('ov-pl-' + key);
+    const posEl  = document.getElementById('ov-pos-' + key);
+    const bestEl = document.getElementById('ov-best-' + key);
+
+    if (valEl && val > 0) {
+      valEl.textContent = fmt(val);
+      plEl.textContent  = sign(pl) + fmt(pl) + '  (' + sign(plp) + Math.abs(plp).toFixed(1) + '%)  all time';
+      plEl.style.color  = pl >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+    if (posEl) posEl.textContent = data.length + ' positions';
+    if (bestEl && best) {
+      const bp = prices[best.ticker];
+      bestEl.textContent = '↑ ' + best.ticker + '  +' + (bp.changeP||0).toFixed(1) + '% today';
+    }
+  }
+
+  // Combined hero
+  const allData      = [...PORTFOLIO, ...TRAVEL_FUND];
+  const allHave      = allData.filter(p => prices[p.ticker]);
+  const combinedVal  = allHave.reduce((s, p) => s + p.shares * prices[p.ticker].price, 0);
+  const combinedCost = allData.reduce((s, p) => s + p.shares * p.cost, 0);
+  const combinedPL   = combinedVal - combinedCost;
+  const combinedPLp  = combinedCost > 0 ? combinedPL / combinedCost * 100 : 0;
+  const combinedDay  = allHave.reduce((s, p) => s + p.shares * (prices[p.ticker].change||0), 0);
+  const bestToday    = allHave.filter(p => prices[p.ticker].changeP != null)
+    .sort((a, b) => (prices[b.ticker].changeP||0) - (prices[a.ticker].changeP||0))[0];
+
+  const cvEl   = document.getElementById('ov-combined-val');
+  const cplEl  = document.getElementById('ov-combined-pl');
+  const ccEl   = document.getElementById('ov-combined-cost');
+  const cposEl = document.getElementById('ov-combined-pos');
+  const cdayEl = document.getElementById('ov-combined-day');
+  const cbestEl= document.getElementById('ov-combined-best');
+
+  if (cvEl && combinedVal > 0) {
+    cvEl.textContent  = fmt(combinedVal);
+    cplEl.textContent = sign(combinedPL) + fmt(combinedPL) + '  (' + sign(combinedPLp) + Math.abs(combinedPLp).toFixed(1) + '%)  total return';
+    cplEl.style.color = combinedPL >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+  if (ccEl)   ccEl.textContent   = fmt(combinedCost);
+  if (cposEl) cposEl.textContent = (PORTFOLIO.length + TRAVEL_FUND.length) + ' positions';
+  if (cdayEl && combinedDay !== 0) {
+    cdayEl.textContent = sign(combinedDay) + fmtS(combinedDay);
+    cdayEl.style.color = combinedDay >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+  if (cbestEl && bestToday) {
+    cbestEl.textContent = bestToday.ticker + ' +' + (prices[bestToday.ticker].changeP||0).toFixed(1) + '%';
+    cbestEl.style.color = 'var(--green)';
+  }
+}
+
 async function init() {
   document.getElementById('refresh-btn').disabled = true;
 
@@ -800,7 +933,9 @@ async function init() {
 
   // Step 2 — Fetch portfolio in parallel batches (priority)
   const watchOnly = WATCHLIST.filter(w => !PORTFOLIO.find(p => p.ticker === w.ticker));
-  await fetchBatch(PORTFOLIO);
+  // Fetch all portfolios
+  const allHoldings = [...PORTFOLIO, ...TRAVEL_FUND.filter(t => !PORTFOLIO.find(p => p.ticker === t.ticker))];
+  await fetchBatch(allHoldings);
 
   // Portfolio done — unlock UI immediately
   clearStatus();
@@ -822,28 +957,28 @@ async function init() {
 // ═══════════════════════════════════════════════════════
 // PORTFOLIO
 // ═══════════════════════════════════════════════════════
-function renderPortfolio() { renderMetrics(); renderTable(); renderAlloc(); }
+function renderPortfolio() { renderMetrics(); renderTable(); renderAlloc(); renderOverview(); }
 
 function totalVal() {
-  return PORTFOLIO.filter(p=>prices[p.ticker]).reduce((s,p)=>s+p.shares*prices[p.ticker].price,0)||null;
+  return activePortfolio().filter(p=>prices[p.ticker]).reduce((s,p)=>s+p.shares*prices[p.ticker].price,0)||null;
 }
 
 function renderMetrics() {
-  const tc=PORTFOLIO.reduce((s,p)=>s+p.shares*p.cost,0), tv=totalVal();
+  const tc=activePortfolio().reduce((s,p)=>s+p.shares*p.cost,0), tv=totalVal();
   const pl=tv?tv-tc:null, plp=pl?pl/tc*100:null;
   document.getElementById('m-cost').textContent=$(tc,0);
-  document.getElementById('m-pos').textContent=PORTFOLIO.length+' positions';
+  const portMeta=PORTFOLIOS[activePortfolioKey]; document.getElementById('m-pos').textContent=activePortfolio().length+' positions · '+portMeta.sub;
   if(tv){ document.getElementById('m-val').textContent=$(tv,0); document.getElementById('m-val-sub').innerHTML=`<span class="${cc(pl)}">${pl>=0?'+':''}${$(pl,0)}</span>`; }
   if(plp!=null){ const el=document.getElementById('m-ret'); el.textContent=pct(plp); el.className='metric-val '+cc(plp); document.getElementById('m-ret-sub').innerHTML=`<span class="${cc(plp)}">since Feb 2025</span>`; }
-  const have=PORTFOLIO.filter(p=>prices[p.ticker]);
+  const have=activePortfolio().filter(p=>prices[p.ticker]);
   if(have.length){ const dd=have.reduce((s,p)=>s+p.shares*prices[p.ticker].change,0), dp=have.reduce((s,p)=>s+prices[p.ticker].changePct,0)/have.length; const el=document.getElementById('m-day'); el.textContent=(dd>=0?'+':'')+$(dd,0); el.className='metric-val '+cc(dd); document.getElementById('m-day-sub').innerHTML=`<span class="${cc(dd)}">${pct(dp)} avg</span>`; }
-  const best=PORTFOLIO.filter(p=>prices[p.ticker]).map(p=>({n:p.name,p:(prices[p.ticker].price-p.cost)/p.cost*100})).sort((a,b)=>b.p-a.p)[0];
+  const best=activePortfolio().filter(p=>prices[p.ticker]).map(p=>({n:p.name,p:(prices[p.ticker].price-p.cost)/p.cost*100})).sort((a,b)=>b.p-a.p)[0];
   if(best){ document.getElementById('m-best').textContent=best.n.split(' ')[0]; document.getElementById('m-best-sub').innerHTML=`<span class="${cc(best.p)}">${pct(best.p)}</span>`; }
 }
 
 function renderTable() {
   const tv=totalVal();
-  document.getElementById('port-body').innerHTML=PORTFOLIO.map((p,i)=>{
+  document.getElementById('port-body').innerHTML=activePortfolio().map((p,i)=>{
     const px=prices[p.ticker], cur=px?.price, val=cur!=null?p.shares*cur:null, cost=p.shares*p.cost;
     const pl=val!=null?val-cost:null, plp=pl!=null?pl/cost*100:null, wt=val!=null&&tv?val/tv*100:null;
     const drop=px?.high52&&cur?(cur-px.high52)/px.high52*100:null;
@@ -942,6 +1077,7 @@ const COMPANY_INFO = {
   'EQIX': { sector:'Data Centre REIT', what:'Equinix is the world largest data centre REIT operating 260+ facilities in 70 countries. Hyperscalers, enterprises and cloud providers all pay rent to Equinix.', why:'Data centre vacancy at record-low 1.6%. Equinix can charge premium rates for space. Rental rates for large builds up 19% in one year. The landlord wins when supply is constrained.' },
   'ETN':  { sector:'Electrical Equipment', what:'Eaton Corporation makes power management equipment, transformers, circuit breakers and electrical infrastructure. Every grid upgrade and data centre build uses Eaton equipment.', why:'Transformer lead times are now 4 years. Every energy solution requires Eaton equipment to connect to the grid. The picks-and-shovels play on every energy technology simultaneously.' },
   'FCX':  { sector:'Copper Mining', what:'Freeport-McMoRan is the world largest publicly traded copper producer, with mines in the Americas and Indonesia. Copper is the essential conductor in all electrical infrastructure.', why:'A single 100MW data centre uses 3,000 tonnes of copper. The IEA projects mines will only meet 70% of 2035 demand. When copper prices spike, FCX moves first and fastest.' },
+  'BKNG': { sector:'Travel / Technology', what:'Booking Holdings owns Booking.com, Priceline, Kayak and OpenTable. The largest online travel agency in the world by bookings volume processing over 1 billion room nights annually.', why:'Dominant two-sided marketplace moat — more listings attract more travellers attract more listings. AI-powered personalisation is lifting conversion. Trades at a discount to quality peers despite exceptional free cash flow.' },
   'CCJ':  { sector:'Uranium Mining', what:'Cameco is the largest Western uranium producer, supplying fuel to nuclear power plants globally. As nuclear energy makes a comeback, Cameco supplies the fuel.', why:'The nuclear renaissance is underway. Constellation Energy is restarting closed plants. Every new reactor needs uranium. Cameco is the direct leveraged play on the nuclear thesis.' },
 };
 
@@ -1738,6 +1874,11 @@ function renderAIOutlook(outlook) {
       </div>
     </div>`;
 }
+
+// ═══════════════════════════════════════════════════════
+// COMBINED PORTFOLIO VALUE (both portfolios)
+// ═══════════════════════════════════════════════════════
+
 
 // ═══════════════════════════════════════════════════════
 // TABS
