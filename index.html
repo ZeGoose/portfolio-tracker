@@ -423,10 +423,10 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .ov-stat-val { font-family:var(--serif); font-size:16px; color:var(--cream); }
 .ov-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .ov-card { background:var(--ink-2); border:1px solid var(--border); border-radius:4px; padding:16px 18px; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
-.ov-card::after { content:'→'; position:absolute; right:14px; bottom:14px; font-family:var(--mono); font-size:11px; color:var(--cream-3); opacity:0; transition:opacity 0.2s; }
+.ov-card::after { content:'→ view'; position:absolute; right:14px; bottom:14px; font-family:var(--mono); font-size:8px; letter-spacing:0.1em; color:var(--cream-3); opacity:0; transition:opacity 0.2s; }
 .ov-card:hover { border-color:var(--gold-dim); }
 .ov-card:hover::after { opacity:1; }
-.ov-card.active { border-color:var(--gold); background:var(--ink-3); }
+.ov-card.active { border:2px solid var(--gold); background:var(--ink-3); }
 .ov-card.active::after { content:'↓ viewing'; opacity:1; color:var(--gold); font-size:8px; letter-spacing:0.1em; }
 .ov-card-num { font-family:var(--mono); font-size:8px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cream-3); margin-bottom:4px; }
 .ov-card-name { font-family:var(--serif); font-size:17px; color:var(--cream); margin-bottom:2px; }
@@ -614,10 +614,61 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 <!-- ══════════════════════════════════════════════ -->
 <div class="panel active" id="panel-portfolio">
   <div class="status" id="status"></div>
-  <!-- PORTFOLIO SWITCHER -->
-  <div class="port-switcher">
-    <button class="port-switch-btn active" id="sw-watcher" onclick="switchPortfolio('watcher')">The Watcher</button>
-    <button class="port-switch-btn" id="sw-travel" onclick="switchPortfolio('travel')">Travel Fund</button>
+  <!-- OVERVIEW DASHBOARD -->
+  <div class="ov-dashboard">
+
+    <!-- R1M Goal Tracker -->
+    <div class="ov-goal">
+      <div class="ov-goal-row">
+        <div class="ov-goal-label">Goal · R1,000,000 total portfolio value</div>
+        <div class="ov-goal-pct" id="ov-goal-pct">Loading…</div>
+      </div>
+      <div class="ov-goal-track">
+        <div class="ov-goal-fill" id="ov-goal-fill" style="width:0%"></div>
+      </div>
+      <div class="ov-goal-sub">
+        <div class="ov-goal-sub-val" id="ov-goal-current">Current: —</div>
+        <div class="ov-goal-sub-val" id="ov-goal-remaining">Remaining: —</div>
+      </div>
+    </div>
+
+    <!-- Combined hero -->
+    <div class="ov-hero">
+      <div class="ov-hero-label">Total portfolio value · both accounts</div>
+      <div class="ov-hero-val" id="ov-combined-val">—</div>
+      <div class="ov-hero-pl" id="ov-combined-pl">—</div>
+      <div class="ov-hero-stats">
+        <div class="ov-stat"><div class="ov-stat-label">Total invested</div><div class="ov-stat-val" id="ov-combined-cost">—</div></div>
+        <div class="ov-stat"><div class="ov-stat-label">Positions</div><div class="ov-stat-val" id="ov-combined-pos">—</div></div>
+        <div class="ov-stat"><div class="ov-stat-label">Today's move</div><div class="ov-stat-val" id="ov-combined-day">—</div></div>
+        <div class="ov-stat"><div class="ov-stat-label">Best today</div><div class="ov-stat-val" id="ov-combined-best">—</div></div>
+      </div>
+    </div>
+
+    <!-- Portfolio cards -->
+    <div class="ov-cards">
+      <div class="ov-card active" id="ov-watcher" onclick="switchPortfolio('watcher')">
+        <div class="ov-card-num">Portfolio 1</div>
+        <div class="ov-card-name">Vestact</div>
+        <div class="ov-card-sub">Main · USD</div>
+        <div class="ov-card-val" id="ov-val-watcher">—</div>
+        <div class="ov-card-pl" id="ov-pl-watcher">—</div>
+        <hr class="ov-card-divider">
+        <div class="ov-card-positions" id="ov-pos-watcher">10 positions</div>
+        <div class="ov-card-best" id="ov-best-watcher">—</div>
+      </div>
+      <div class="ov-card" id="ov-travel" onclick="switchPortfolio('travel')">
+        <div class="ov-card-num">Portfolio 2</div>
+        <div class="ov-card-name">Travel Fund</div>
+        <div class="ov-card-sub">EasyEquities · USD</div>
+        <div class="ov-card-val" id="ov-val-travel">—</div>
+        <div class="ov-card-pl" id="ov-pl-travel">—</div>
+        <hr class="ov-card-divider">
+        <div class="ov-card-positions" id="ov-pos-travel">4 positions</div>
+        <div class="ov-card-best" id="ov-best-travel">—</div>
+      </div>
+    </div>
+
   </div>
   <div class="port-note" id="port-note" style="display:none"></div>
 
@@ -845,11 +896,10 @@ async function fetchBatch(stocks) {
 // ═══════════════════════════════════════════════════════
 function switchPortfolio(key) {
   activePortfolioKey = key;
-  // Update overview card active states
-  ['watcher','travel'].forEach(k => {
-    const el = document.getElementById('ov-' + k);
-    if (el) el.classList.toggle('active', k === key);
-  });
+  // Update overview card active states — explicit add/remove for reliability
+  document.getElementById('ov-watcher').classList.remove('active');
+  document.getElementById('ov-travel').classList.remove('active');
+  document.getElementById('ov-' + key).classList.add('active');
   // Update metrics section subtitle
   const meta = PORTFOLIOS[key];
   const shNote = document.querySelector('#panel-portfolio .sh-note');
