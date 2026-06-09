@@ -737,37 +737,86 @@ async function fetchQuote(ticker) {
   return { price:q.c, change:q.d, changePct:q.dp, high52:m?.metric?.['52WeekHigh']||null };
 }
 
+// ═══════════════════════════════════════════════════════
+// PRICE CACHE — localStorage for instant load
+// ═══════════════════════════════════════════════════════
+const CACHE_KEY = 'watcher-prices-v1';
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+function saveCache() {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      ts: Date.now(),
+      prices: prices
+    }));
+  } catch(e) {}
+}
+
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return false;
+    const { ts, prices: cached } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL) return false;
+    Object.assign(prices, cached);
+    return true;
+  } catch(e) { return false; }
+}
+
+// ═══════════════════════════════════════════════════════
+// PARALLEL BATCH FETCH — 5 at a time, respects rate limit
+// ═══════════════════════════════════════════════════════
+async function fetchBatch(stocks) {
+  const BATCH = 5;
+  for (let i = 0; i < stocks.length; i += BATCH) {
+    const batch = stocks.slice(i, i + BATCH);
+    await Promise.all(batch.map(async s => {
+      try {
+        prices[s.ticker] = await fetchQuote(s.ticker);
+      } catch(e) { console.warn('Price fail:', s.ticker); }
+    }));
+    if (i + BATCH < stocks.length) await sleep(1100); // 1.1s between batches = safe under 60/min
+    renderPortfolio();
+    renderAlerts();
+  }
+}
+
 async function init() {
   document.getElementById('refresh-btn').disabled = true;
-  setStatus('info','Fetching live prices…');
 
-  // Fetch portfolio first — these are the most important
-  for (const s of PORTFOLIO) {
-    try {
-      prices[s.ticker] = await fetchQuote(s.ticker);
-      renderPortfolio();
-    } catch(e) { console.warn('Price fail:',s.ticker); }
-    await sleep(220);
+  // Step 1 — Load cache instantly (shows real numbers in <100ms)
+  const hasCached = loadCache();
+  if (hasCached) {
+    renderPortfolio();
+    renderAlerts();
+    renderTopbarAlerts();
+    const cached = new Date(JSON.parse(localStorage.getItem(CACHE_KEY)).ts);
+    document.getElementById('updated').textContent =
+      'Cached ' + cached.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    setStatus('info', 'Refreshing prices in background…');
+  } else {
+    setStatus('info', 'Fetching live prices…');
   }
 
-  // Render portfolio immediately with what we have
+  // Step 2 — Fetch portfolio in parallel batches (priority)
+  const watchOnly = WATCHLIST.filter(w => !PORTFOLIO.find(p => p.ticker === w.ticker));
+  await fetchBatch(PORTFOLIO);
+
+  // Portfolio done — unlock UI immediately
   clearStatus();
+  saveCache();
   renderPortfolio();
   const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   document.getElementById('updated').textContent = 'Updated ' + t;
   document.getElementById('refresh-btn').disabled = false;
 
-  // Then fetch watchlist in background — slower, doesn't block portfolio
-  for (const s of WATCHLIST.filter(w => !PORTFOLIO.find(p=>p.ticker===w.ticker))) {
-    try {
-      prices[s.ticker] = await fetchQuote(s.ticker);
-      renderAlerts();
-    } catch(e) { console.warn('Price fail:',s.ticker); }
-    await sleep(300); // slower to stay within rate limit
-  }
-
-  renderAlerts(); renderTopbarAlerts();
-  document.getElementById('alert-updated').textContent = 'Checked ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  // Step 3 — Fetch watchlist in background (lower priority)
+  await fetchBatch(watchOnly);
+  saveCache();
+  renderAlerts();
+  renderTopbarAlerts();
+  document.getElementById('alert-updated').textContent =
+    'Checked ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
 
 // ═══════════════════════════════════════════════════════
