@@ -406,6 +406,14 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 /* ── OVERVIEW DASHBOARD ── */
 .ov-dashboard { margin-bottom:28px; }
 .ov-hero { background:var(--ink-2); border:1px solid var(--border); border-radius:4px; padding:24px 28px; margin-bottom:12px; }
+.ov-goal { background:var(--ink-2); border:1px solid var(--border); border-radius:4px; padding:14px 20px; margin-bottom:12px; }
+.ov-goal-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.ov-goal-label { font-family:var(--mono); font-size:8px; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-dim); }
+.ov-goal-pct { font-family:var(--mono); font-size:11px; color:var(--gold); }
+.ov-goal-track { height:4px; background:var(--ink-4); border-radius:2px; overflow:hidden; }
+.ov-goal-fill { height:100%; border-radius:2px; background:linear-gradient(90deg, var(--gold-dim), var(--gold)); transition:width 0.8s ease; }
+.ov-goal-sub { display:flex; justify-content:space-between; margin-top:6px; }
+.ov-goal-sub-val { font-family:var(--mono); font-size:9px; color:var(--cream-3); }
 .ov-hero-label { font-family:var(--mono); font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--cream-3); margin-bottom:8px; }
 .ov-hero-val { font-family:var(--serif); font-size:42px; color:var(--cream); letter-spacing:-0.01em; margin-bottom:6px; }
 .ov-hero-pl { font-family:var(--mono); font-size:12px; margin-bottom:16px; }
@@ -733,8 +741,8 @@ const TRAVEL_FUND = [
 ];
 
 const PORTFOLIOS = {
-  watcher:  { label:'The Watcher',  sub:'Main portfolio · USD',  data: PORTFOLIO },
-  travel:   { label:'Travel Fund',  sub:'EasyEquities · USD',    data: TRAVEL_FUND },
+  watcher:  { label:'Vestact',       sub:'Main portfolio · USD',  data: PORTFOLIO },
+  travel:   { label:'Travel Fund',  sub:'EasyEquities · USD',     data: TRAVEL_FUND },
 };
 
 let activePortfolioKey = 'watcher';
@@ -837,11 +845,19 @@ async function fetchBatch(stocks) {
 // ═══════════════════════════════════════════════════════
 function switchPortfolio(key) {
   activePortfolioKey = key;
-  // Update overview card states
-  document.querySelectorAll('.overview-card').forEach(c => c.classList.remove('active'));
-  document.getElementById('ov-' + key).classList.add('active');
-  // Re-render with new portfolio
-  renderPortfolio();
+  // Update overview card active states
+  ['watcher','travel'].forEach(k => {
+    const el = document.getElementById('ov-' + k);
+    if (el) el.classList.toggle('active', k === key);
+  });
+  // Update metrics section subtitle
+  const meta = PORTFOLIOS[key];
+  const shNote = document.querySelector('#panel-portfolio .sh-note');
+  if (shNote) shNote.textContent = meta.label + ' · ' + meta.sub;
+  // Re-render holdings for selected portfolio
+  renderMetrics();
+  renderTable();
+  renderAlloc();
 }
 
 function renderOverview() {
@@ -897,6 +913,25 @@ function renderOverview() {
   const cdayEl = document.getElementById('ov-combined-day');
   const cbestEl= document.getElementById('ov-combined-best');
 
+  // R1M Goal tracker — use live ZAR rate from market pulse, fallback to 18.5
+  const zarRate = mktData['ZAR'] || 18.5;
+  const valZAR   = combinedVal * zarRate;
+  const goalZAR  = 1000000;
+  const pctDone  = Math.min(valZAR / goalZAR * 100, 100);
+  const remaining = Math.max(goalZAR - valZAR, 0);
+
+  const goalPctEl  = document.getElementById('ov-goal-pct');
+  const goalFillEl = document.getElementById('ov-goal-fill');
+  const goalCurEl  = document.getElementById('ov-goal-current');
+  const goalRemEl  = document.getElementById('ov-goal-remaining');
+
+  if (goalPctEl && combinedVal > 0) {
+    goalPctEl.textContent  = pctDone.toFixed(1) + '% of R1M';
+    goalFillEl.style.width = pctDone.toFixed(1) + '%';
+    goalCurEl.textContent  = 'Current: R' + valZAR.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    goalRemEl.textContent  = 'Remaining: R' + remaining.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
   if (cvEl && combinedVal > 0) {
     cvEl.textContent  = fmt(combinedVal);
     cplEl.textContent = sign(combinedPL) + fmt(combinedPL) + '  (' + sign(combinedPLp) + Math.abs(combinedPLp).toFixed(1) + '%)  total return';
@@ -932,15 +967,21 @@ async function init() {
   }
 
   // Step 2 — Fetch portfolio in parallel batches (priority)
-  const watchOnly = WATCHLIST.filter(w => !PORTFOLIO.find(p => p.ticker === w.ticker));
+  const allPortSet = new Set([...PORTFOLIO, ...TRAVEL_FUND].map(p => p.ticker));
+  const watchOnly = WATCHLIST.filter(w => !allPortSet.has(w.ticker));
   // Fetch all portfolios
-  const allHoldings = [...PORTFOLIO, ...TRAVEL_FUND.filter(t => !PORTFOLIO.find(p => p.ticker === t.ticker))];
+  // Fetch all unique tickers across both portfolios
+  const allPortTickers = new Set([...PORTFOLIO, ...TRAVEL_FUND].map(p => p.ticker));
+  const allHoldings = [...PORTFOLIO,
+    ...TRAVEL_FUND.filter(t => !PORTFOLIO.find(p => p.ticker === t.ticker))
+  ];
   await fetchBatch(allHoldings);
 
   // Portfolio done — unlock UI immediately
   clearStatus();
   saveCache();
   renderPortfolio();
+  renderOverview();
   const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   document.getElementById('updated').textContent = 'Updated ' + t;
   document.getElementById('refresh-btn').disabled = false;
@@ -957,7 +998,7 @@ async function init() {
 // ═══════════════════════════════════════════════════════
 // PORTFOLIO
 // ═══════════════════════════════════════════════════════
-function renderPortfolio() { renderMetrics(); renderTable(); renderAlloc(); renderOverview(); }
+function renderPortfolio() { renderMetrics(); renderTable(); renderAlloc(); }
 
 function totalVal() {
   return activePortfolio().filter(p=>prices[p.ticker]).reduce((s,p)=>s+p.shares*prices[p.ticker].price,0)||null;
@@ -1340,6 +1381,8 @@ async function fetchPulse() {
       document.getElementById('ps-zar').textContent = 'R' + Number(cur).toFixed(2);
       document.getElementById('ps-zar-chg').textContent = (chg>=0?'+':'') + chg.toFixed(2) + '% vs yesterday';
       document.getElementById('ps-zar-chg').className = 'ps-chg ' + (chg>=0?'pos':'neg');
+      mktData['ZAR'] = Number(cur); // store live rate for goal tracker
+      renderOverview(); // re-render goal tracker with live rate
     }
   } catch(e) { console.warn('ZAR fetch failed', e); }
   await sleep(150);
