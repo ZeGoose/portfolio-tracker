@@ -404,40 +404,33 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .port-switch-btn.active { background:var(--ink-3); border-color:var(--gold); color:var(--gold); }
 .port-switch-label { font-family:var(--serif); font-size:11px; color:var(--cream-3); margin-top:1px; }
 /* ── OVERVIEW DASHBOARD ── */
-.ov-dashboard { margin-bottom:28px; }
-.ov-hero { background:var(--ink-2); border:1px solid var(--border); border-radius:4px; padding:24px 28px; margin-bottom:12px; }
-.ov-goal { background:var(--ink-2); border:1px solid var(--border); border-radius:4px; padding:14px 20px; margin-bottom:12px; }
-.ov-goal-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.ov-dashboard { margin-bottom:20px; }
+.ov-goal { border:1px solid var(--border); border-radius:3px; padding:10px 16px; margin-bottom:10px; }
+.ov-goal-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
 .ov-goal-label { font-family:var(--mono); font-size:8px; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-dim); }
-.ov-goal-pct { font-family:var(--mono); font-size:11px; color:var(--gold); }
-.ov-goal-track { height:4px; background:var(--ink-4); border-radius:2px; overflow:hidden; }
+.ov-goal-pct { font-family:var(--mono); font-size:10px; color:var(--gold); }
+.ov-goal-track { height:3px; background:var(--ink-4); border-radius:2px; overflow:hidden; }
 .ov-goal-fill { height:100%; border-radius:2px; background:linear-gradient(90deg, var(--gold-dim), var(--gold)); transition:width 0.8s ease; }
-.ov-goal-sub { display:flex; justify-content:space-between; margin-top:6px; }
+.ov-goal-sub { display:flex; justify-content:space-between; margin-top:5px; }
 .ov-goal-sub-val { font-family:var(--mono); font-size:9px; color:var(--cream-3); }
-.ov-hero-label { font-family:var(--mono); font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--cream-3); margin-bottom:8px; }
-.ov-hero-val { font-family:var(--serif); font-size:42px; color:var(--cream); letter-spacing:-0.01em; margin-bottom:6px; }
-.ov-hero-pl { font-family:var(--mono); font-size:12px; margin-bottom:16px; }
-.ov-hero-stats { display:flex; gap:28px; padding-top:16px; border-top:1px solid var(--border); }
-.ov-stat { display:flex; flex-direction:column; gap:3px; }
-.ov-stat-label { font-family:var(--mono); font-size:8px; letter-spacing:0.1em; text-transform:uppercase; color:var(--cream-3); }
-.ov-stat-val { font-family:var(--serif); font-size:16px; color:var(--cream); }
-.ov-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.ov-card { background:var(--ink-2); border:1px solid var(--border); border-radius:4px; padding:16px 18px; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
-.ov-card::after { content:'→ view'; position:absolute; right:14px; bottom:14px; font-family:var(--mono); font-size:8px; letter-spacing:0.1em; color:var(--cream-3); opacity:0; transition:opacity 0.2s; }
+.ov-hero { border:1px solid var(--border); border-radius:3px; padding:14px 18px; margin-bottom:10px; }
+.ov-hero-label { font-family:var(--mono); font-size:8px; letter-spacing:0.12em; text-transform:uppercase; color:var(--cream-3); margin-bottom:4px; }
+.ov-hero-val { font-family:var(--serif); font-size:28px; color:var(--cream); margin-bottom:3px; }
+.ov-hero-pl { font-family:var(--mono); font-size:10px; margin-bottom:10px; }
+.ov-hero-stats { display:flex; gap:20px; padding-top:10px; border-top:1px solid var(--border); flex-wrap:wrap; }
+.ov-stat { display:flex; flex-direction:column; gap:2px; }
+.ov-stat-label { font-family:var(--mono); font-size:8px; letter-spacing:0.08em; text-transform:uppercase; color:var(--cream-3); }
+.ov-stat-val { font-family:var(--mono); font-size:11px; color:var(--cream); }
+.ov-cards { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:4px; }
+.ov-card { border:1px solid var(--border); border-radius:3px; padding:10px 14px; cursor:pointer; transition:border-color 0.15s, background 0.15s; display:flex; align-items:center; justify-content:space-between; }
 .ov-card:hover { border-color:var(--gold-dim); }
-.ov-card:hover::after { opacity:1; }
-.ov-card.active { border:2px solid var(--gold); background:var(--ink-3); }
-.ov-card.active::after { content:'↓ viewing'; opacity:1; color:var(--gold); font-size:8px; letter-spacing:0.1em; }
-.ov-card-num { font-family:var(--mono); font-size:8px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cream-3); margin-bottom:4px; }
-.ov-card-name { font-family:var(--serif); font-size:17px; color:var(--cream); margin-bottom:2px; }
-.ov-card-sub { font-family:var(--mono); font-size:9px; color:var(--cream-3); margin-bottom:12px; }
-.ov-card-val { font-family:var(--serif); font-size:24px; color:var(--cream); margin-bottom:3px; }
-.ov-card-pl { font-family:var(--mono); font-size:10px; }
-.ov-card-divider { border:none; border-top:1px solid var(--border); margin:10px 0; }
-.ov-card-positions { font-family:var(--mono); font-size:9px; color:var(--cream-3); }
-.ov-card-best { font-family:var(--mono); font-size:9px; color:var(--green); margin-top:2px; }
-.port-note { font-family:var(--mono); font-size:9px; color:var(--l2-color); background:var(--l2-bg); border:1px solid var(--l2-border); border-radius:2px; padding:4px 10px; margin-bottom:16px; display:none; }
-.port-note.show { display:block; }
+.ov-card.active { border-color:var(--gold); background:var(--ink-3); }
+.ov-card-left { display:flex; flex-direction:column; gap:1px; }
+.ov-card-name { font-family:var(--serif); font-size:13px; color:var(--cream); }
+.ov-card-sub { font-family:var(--mono); font-size:8px; color:var(--cream-3); }
+.ov-card-right { text-align:right; }
+.ov-card-val { font-family:var(--serif); font-size:14px; color:var(--cream); }
+.ov-card-pl { font-family:var(--mono); font-size:8px; }
 
 /* ── FORECAST PANEL ── */
 #panel-forecast { padding:28px 32px 60px; }
@@ -648,24 +641,24 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
     <!-- Portfolio cards -->
     <div class="ov-cards">
       <div class="ov-card active" id="ov-watcher" onclick="switchPortfolio('watcher')">
-        <div class="ov-card-num">Portfolio 1</div>
-        <div class="ov-card-name">Vestact</div>
-        <div class="ov-card-sub">Main · USD</div>
-        <div class="ov-card-val" id="ov-val-watcher">—</div>
-        <div class="ov-card-pl" id="ov-pl-watcher">—</div>
-        <hr class="ov-card-divider">
-        <div class="ov-card-positions" id="ov-pos-watcher">10 positions</div>
-        <div class="ov-card-best" id="ov-best-watcher">—</div>
+        <div class="ov-card-left">
+          <div class="ov-card-name">Vestact</div>
+          <div class="ov-card-sub" id="ov-pos-watcher">10 positions</div>
+        </div>
+        <div class="ov-card-right">
+          <div class="ov-card-val" id="ov-val-watcher">—</div>
+          <div class="ov-card-pl" id="ov-pl-watcher">—</div>
+        </div>
       </div>
       <div class="ov-card" id="ov-travel" onclick="switchPortfolio('travel')">
-        <div class="ov-card-num">Portfolio 2</div>
-        <div class="ov-card-name">Travel Fund</div>
-        <div class="ov-card-sub">EasyEquities · USD</div>
-        <div class="ov-card-val" id="ov-val-travel">—</div>
-        <div class="ov-card-pl" id="ov-pl-travel">—</div>
-        <hr class="ov-card-divider">
-        <div class="ov-card-positions" id="ov-pos-travel">4 positions</div>
-        <div class="ov-card-best" id="ov-best-travel">—</div>
+        <div class="ov-card-left">
+          <div class="ov-card-name">Travel Fund</div>
+          <div class="ov-card-sub" id="ov-pos-travel">4 positions</div>
+        </div>
+        <div class="ov-card-right">
+          <div class="ov-card-val" id="ov-val-travel">—</div>
+          <div class="ov-card-pl" id="ov-pl-travel">—</div>
+        </div>
       </div>
     </div>
 
@@ -688,7 +681,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
   <div class="sh"><div class="sh-title">Holdings</div><div class="sh-note">Finnhub · refreshes every 5 min</div></div>
   <div class="tbl-wrap">
     <table class="tbl">
-      <thead><tr><th>Company</th><th>Ticker</th><th>Shares</th><th>Avg cost</th><th>Current</th><th>Day</th><th>Value</th><th>P&L $</th><th>P&L %</th><th>Weight</th></tr></thead>
+      <thead><tr><th>Company</th><th>Ticker</th><th>Shares</th><th>Avg cost</th><th>Current</th><th>Value</th><th>P&L $</th><th>P&L %</th><th>Ann. return</th></tr></thead>
       <tbody id="port-body"></tbody>
     </table>
   </div>
@@ -1002,6 +995,17 @@ function renderOverview() {
 async function init() {
   document.getElementById('refresh-btn').disabled = true;
 
+  // Step 0 — Fetch live ZAR rate immediately so goal tracker is accurate
+  try {
+    const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=ZAR');
+    const d = await r.json();
+    if (d.rates && d.rates.ZAR) {
+      mktData['ZAR'] = d.rates.ZAR;
+      document.getElementById('ps-zar').textContent = 'R' + d.rates.ZAR.toFixed(2);
+      document.getElementById('ps-zar-chg').textContent = 'Live';
+    }
+  } catch(e) { mktData['ZAR'] = 18.3; } // fallback only if network fails
+
   // Step 1 — Load cache instantly (shows real numbers in <100ms)
   const hasCached = loadCache();
   if (hasCached) {
@@ -1060,7 +1064,18 @@ function renderMetrics() {
   document.getElementById('m-cost').textContent=$(tc,0);
   const portMeta=PORTFOLIOS[activePortfolioKey]; document.getElementById('m-pos').textContent=activePortfolio().length+' positions · '+portMeta.sub;
   if(tv){ document.getElementById('m-val').textContent=$(tv,0); document.getElementById('m-val-sub').innerHTML=`<span class="${cc(pl)}">${pl>=0?'+':''}${$(pl,0)}</span>`; }
-  if(plp!=null){ const el=document.getElementById('m-ret'); el.textContent=pct(plp); el.className='metric-val '+cc(plp); document.getElementById('m-ret-sub').innerHTML=`<span class="${cc(plp)}">since Feb 2025</span>`; }
+  if(plp!=null){
+    const el=document.getElementById('m-ret'); el.textContent=pct(plp); el.className='metric-val '+cc(plp);
+    // Calculate annualised return based on portfolio buy dates
+    const port = activePortfolio();
+    const buyDates = port.map(p => p.date ? new Date(p.date) : new Date('2025-02-25'));
+    const oldest = new Date(Math.min(...buyDates));
+    const years = (Date.now() - oldest) / (365.25 * 24 * 3600 * 1000);
+    if(years > 0.1 && plp != null){
+      const ann = (Math.pow(1 + plp/100, 1/years) - 1) * 100;
+      document.getElementById('m-ret-sub').innerHTML=`<span class="${cc(ann)}">${ann>=0?'+':''}${ann.toFixed(1)}% annualised</span>`;
+    }
+  }
   const have=activePortfolio().filter(p=>prices[p.ticker]);
   if(have.length){ const dd=have.reduce((s,p)=>s+p.shares*prices[p.ticker].change,0), dp=have.reduce((s,p)=>s+prices[p.ticker].changePct,0)/have.length; const el=document.getElementById('m-day'); el.textContent=(dd>=0?'+':'')+$(dd,0); el.className='metric-val '+cc(dd); document.getElementById('m-day-sub').innerHTML=`<span class="${cc(dd)}">${pct(dp)} avg</span>`; }
   const best=activePortfolio().filter(p=>prices[p.ticker]).map(p=>({n:p.name,p:(prices[p.ticker].price-p.cost)/p.cost*100})).sort((a,b)=>b.p-a.p)[0];
@@ -1071,27 +1086,34 @@ function renderTable() {
   const tv=totalVal();
   document.getElementById('port-body').innerHTML=activePortfolio().map((p,i)=>{
     const px=prices[p.ticker], cur=px?.price, val=cur!=null?p.shares*cur:null, cost=p.shares*p.cost;
-    const pl=val!=null?val-cost:null, plp=pl!=null?pl/cost*100:null, wt=val!=null&&tv?val/tv*100:null;
+    const pl=val!=null?val-cost:null, plp=pl!=null?pl/cost*100:null;
     const drop=px?.high52&&cur?(cur-px.high52)/px.high52*100:null;
     const lv=drop!=null?(drop<=-30?'<div class="lv lv-3 on">Must buy</div>':drop<=-20?'<div class="lv lv-2 on">Consider</div>':drop<=-10?'<div class="lv lv-1 on">Watch</div>':''):'';
     const ld=v=>v!=null?v:`<span class="loading-val">—</span>`;
     const cl=(v,f)=>v!=null?`<span class="${cc(v)}">${f(v)}</span>`:`<span class="loading-val">—</span>`;
+    // Per-stock annualised return from its own buy date
+    let ann=null;
+    if(plp!=null){
+      const bought=new Date(p.date||'2025-02-25');
+      const yrs=(Date.now()-bought)/(365.25*24*3600*1000);
+      if(yrs>0.08) ann=(Math.pow(1+plp/100,1/yrs)-1)*100;
+      else ann=plp; // too recent to annualise meaningfully
+    }
     return `<tr style="animation-delay:${i*0.03}s">
       <td><div class="co-name">${p.name}</div>${lv}</td>
       <td><div class="co-ticker">${p.ticker}</div></td>
       <td>${p.shares}</td><td>${$(p.cost)}</td>
       <td>${ld(cur!=null?$(cur):null)}</td>
-      <td>${cur!=null?cl(px.change,v=>$(v)+' ('+pct(px.changePct)+')'):ld(null)}</td>
       <td>${ld(val!=null?$(val,0):null)}</td>
       <td>${cl(pl,v=>$(v,0))}</td><td>${cl(plp,pct)}</td>
-      <td>${ld(wt!=null?pct(wt,false):null)}</td>
+      <td>${cl(ann,v=>pct(v)+'/yr')}</td>
     </tr>`;
   }).join('');
 }
 
 function renderAlloc() {
   const tv=totalVal(); if(!tv)return;
-  document.getElementById('alloc-bars').innerHTML=PORTFOLIO.filter(p=>prices[p.ticker])
+  document.getElementById('alloc-bars').innerHTML=activePortfolio().filter(p=>prices[p.ticker])
     .map(p=>({name:p.name,pct:(p.shares*prices[p.ticker].price)/tv*100,plp:(p.shares*prices[p.ticker].price-p.shares*p.cost)/(p.shares*p.cost)*100}))
     .sort((a,b)=>b.pct-a.pct)
     .map(r=>`<div class="alloc-row"><div class="alloc-name">${r.name}</div><div class="alloc-track"><div class="alloc-fill ${r.plp<0?'losing':''}" style="width:${Math.min(r.pct*6,100)}%"></div></div><div class="alloc-pct">${pct(r.pct,false)}</div><div class="alloc-gl ${cc(r.plp)}">${pct(r.plp)}</div></div>`).join('');
@@ -1420,21 +1442,35 @@ function timeAgo(ts){const d=Date.now()-ts*1000,h=Math.floor(d/3600000),dy=Math.
 // MARKET PULSE STRIP
 // ═══════════════════════════════════════════════════════
 async function fetchPulse() {
-  // ZAR/USD via Finnhub forex quote (OANDA:USD_ZAR)
+  // ZAR/USD — live rate from Frankfurter (open exchange rate API, no key needed)
   try {
-    const r = await fetch(`https://finnhub.io/api/v1/forex/candle?symbol=OANDA:USD_ZAR&resolution=D&count=2&token=${FINNHUB_KEY}`);
+    const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=ZAR');
     const d = await r.json();
-    if (d.c && d.c.length) {
-      const cur = d.c[d.c.length-1];
-      const prev = d.c.length > 1 ? d.c[d.c.length-2] : cur;
-      const chg = ((cur - prev) / prev) * 100;
-      document.getElementById('ps-zar').textContent = 'R' + Number(cur).toFixed(2);
-      document.getElementById('ps-zar-chg').textContent = (chg>=0?'+':'') + chg.toFixed(2) + '% vs yesterday';
-      document.getElementById('ps-zar-chg').className = 'ps-chg ' + (chg>=0?'pos':'neg');
-      mktData['ZAR'] = Number(cur); // store live rate for goal tracker
-      renderOverview(); // re-render goal tracker with live rate
+    if (d.rates && d.rates.ZAR) {
+      const cur = d.rates.ZAR;
+      mktData['ZAR'] = cur;
+      document.getElementById('ps-zar').textContent = 'R' + cur.toFixed(2);
+      document.getElementById('ps-zar-chg').textContent = 'Live rate';
+      document.getElementById('ps-zar-chg').className = 'ps-chg neu';
+      renderOverview();
     }
-  } catch(e) { console.warn('ZAR fetch failed', e); }
+  } catch(e) {
+    // Fallback: try Finnhub forex
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/forex/candle?symbol=OANDA:USD_ZAR&resolution=D&count=2&token=${FINNHUB_KEY}`);
+      const d = await r.json();
+      if (d.c && d.c.length) {
+        const cur = d.c[d.c.length-1];
+        const prev = d.c.length > 1 ? d.c[d.c.length-2] : cur;
+        const chg = ((cur - prev) / prev) * 100;
+        mktData['ZAR'] = Number(cur);
+        document.getElementById('ps-zar').textContent = 'R' + Number(cur).toFixed(2);
+        document.getElementById('ps-zar-chg').textContent = (chg>=0?'+':'') + chg.toFixed(2) + '%';
+        document.getElementById('ps-zar-chg').className = 'ps-chg ' + (chg>=0?'pos':'neg');
+        renderOverview();
+      }
+    } catch(e2) { console.warn('ZAR fetch failed', e2); }
+  }
   await sleep(150);
   // S&P 500 via SPY ETF
   try {
