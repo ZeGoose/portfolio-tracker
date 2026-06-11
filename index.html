@@ -750,9 +750,9 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
       </div>
       <div class="ov-snap-stats">
         <div class="ov-ss"><div class="ov-ss-label">Invested</div><div class="ov-ss-val" id="ov-combined-cost">—</div></div>
+        <div class="ov-ss"><div class="ov-ss-label">Cash</div><div class="ov-ss-val" id="ov-combined-cash">—</div></div>
         <div class="ov-ss"><div class="ov-ss-label">Today</div><div class="ov-ss-val" id="ov-combined-day">—</div></div>
         <div class="ov-ss"><div class="ov-ss-label">Best today</div><div class="ov-ss-val" id="ov-combined-best">—</div></div>
-        <div class="ov-ss"><div class="ov-ss-label">Worst today</div><div class="ov-ss-val" id="ov-combined-worst">—</div></div>
       </div>
     </div>
 
@@ -763,7 +763,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
         <div class="ov-card-right"><div class="ov-card-val" id="ov-val-watcher">—</div><div class="ov-card-pl" id="ov-pl-watcher">—</div></div>
       </div>
       <div class="ov-card" id="ov-travel" onclick="switchPortfolio('travel')">
-        <div><div class="ov-card-name">Travel Fund</div><div class="ov-card-sub" id="ov-pos-travel">4 positions</div></div>
+        <div><div class="ov-card-name">Travel Fund</div><div class="ov-card-sub" id="ov-pos-travel">5 positions</div></div>
         <div class="ov-card-right"><div class="ov-card-val" id="ov-val-travel">—</div><div class="ov-card-pl" id="ov-pl-travel">—</div></div>
       </div>
     </div>
@@ -888,7 +888,11 @@ const TRAVEL_FUND = [
   { name:'Microsoft',        ticker:'MSFT', shares:0.5565, cost:413.27 },
   { name:'Vanguard S&P 500', ticker:'VOO',  shares:1.2574, cost:607.62 },
   { name:'Booking Holdings', ticker:'BKNG', shares:1.1886, cost:168.26 },
+  { name:'ARK Space & Defense', ticker:'ARKX', shares:8, cost:33.37 },
 ];
+
+// Uninvested cash waiting to be deployed (USD)
+const TRAVEL_CASH = 624;
 
 const PORTFOLIOS = {
   watcher:  { label:'Vestact',       sub:'Main portfolio · USD',  data: PORTFOLIO },
@@ -1035,34 +1039,36 @@ function renderOverview() {
     if (posEl) posEl.textContent = data.length + ' positions';
   }
 
-  // Combined snapshot
+  // Combined snapshot — includes uninvested cash in total wealth
   const allData      = [...PORTFOLIO, ...TRAVEL_FUND];
   const allHave      = allData.filter(p => prices[p.ticker]);
-  const combinedVal  = allHave.reduce((s, p) => s + p.shares * prices[p.ticker].price, 0);
-  const combinedCost = allData.reduce((s, p) => s + p.shares * p.cost, 0);
-  const combinedPL   = combinedVal - combinedCost;
-  const combinedPLp  = combinedCost > 0 ? combinedPL / combinedCost * 100 : 0;
+  const investedVal  = allHave.reduce((s, p) => s + p.shares * prices[p.ticker].price, 0);
+  const combinedVal  = investedVal + TRAVEL_CASH;          // total wealth = positions + cash
+  const investedCost = allData.reduce((s, p) => s + p.shares * p.cost, 0);
+  const combinedCost = investedCost + TRAVEL_CASH;         // cash counts as its own cost basis
+  const combinedPL   = investedVal - investedCost;         // P&L only on invested positions
+  const combinedPLp  = investedCost > 0 ? combinedPL / investedCost * 100 : 0;
   const combinedDay  = allHave.reduce((s, p) => s + p.shares * (prices[p.ticker].change||0), 0);
 
-  // Best/worst today — by % move (note: field is changePct, set in fetchQuote)
+  // Best today — by % move (field is changePct, set in fetchQuote)
   const movers = allHave.filter(p => prices[p.ticker].changePct != null)
     .sort((a, b) => prices[b.ticker].changePct - prices[a.ticker].changePct);
   const bestToday  = movers[0];
-  const worstToday = movers[movers.length - 1];
 
   const cvEl    = document.getElementById('ov-combined-val');
   const cplEl   = document.getElementById('ov-combined-pl');
   const ccEl    = document.getElementById('ov-combined-cost');
+  const ccashEl = document.getElementById('ov-combined-cash');
   const cdayEl  = document.getElementById('ov-combined-day');
   const cbestEl = document.getElementById('ov-combined-best');
-  const cworstEl= document.getElementById('ov-combined-worst');
 
   if (cvEl && combinedVal > 0) {
     cvEl.textContent  = fmt(combinedVal);
     cplEl.textContent = sign(combinedPL) + fmt(combinedPL) + ' (' + sign(combinedPLp) + Math.abs(combinedPLp).toFixed(1) + '%) all time';
     cplEl.style.color = combinedPL >= 0 ? 'var(--green)' : 'var(--red)';
   }
-  if (ccEl && combinedCost > 0) ccEl.textContent = fmt(combinedCost);
+  if (ccEl && investedVal > 0) ccEl.textContent = fmt(investedVal);
+  if (ccashEl) ccashEl.textContent = fmt(TRAVEL_CASH);
   if (cdayEl && allHave.length) {
     cdayEl.textContent = sign(combinedDay) + fmt(combinedDay);
     cdayEl.style.color = combinedDay >= 0 ? 'var(--green)' : 'var(--red)';
@@ -1071,11 +1077,6 @@ function renderOverview() {
     const v = prices[bestToday.ticker].changePct;
     cbestEl.textContent = bestToday.ticker + ' ' + sign(v) + Math.abs(v).toFixed(1) + '%';
     cbestEl.style.color = v >= 0 ? 'var(--green)' : 'var(--red)';
-  }
-  if (cworstEl && worstToday) {
-    const v = prices[worstToday.ticker].changePct;
-    cworstEl.textContent = worstToday.ticker + ' ' + sign(v) + Math.abs(v).toFixed(1) + '%';
-    cworstEl.style.color = v >= 0 ? 'var(--green)' : 'var(--red)';
   }
 
   // ZAR conversion + R1M goal — ONLY with the live rate, never a pegged fallback
@@ -1316,6 +1317,7 @@ const COMPANY_INFO = {
   'ASML': { sector:'Semiconductor Equipment', what:'ASML makes EUV lithography machines, the only machines capable of manufacturing the most advanced chips. Every leading-edge chip goes through an ASML machine.', why:'The most irreplaceable monopoly in technology. No chip can be made at 5nm or below without ASML machines. Export restrictions make supply even more constrained.' },
   'NBIS': { sector:'AI Infrastructure / Cloud', what:'Nebius Group is a European AI-native cloud provider spun out of Yandex, offering GPU compute and AI infrastructure services with data centres in Finland.', why:'Europe needs AI cloud infrastructure independent of US hyperscalers. Nebius is positioned as the European alternative. Early stage and high risk but the addressable market is enormous.' },
   'UFO':  { sector:'Space ETF', what:'Procure Space ETF holds companies with significant space industry revenue including satellite operators, launch companies and defence contractors with space exposure.', why:'Pre-SpaceX IPO positioning. Space is the next infrastructure frontier. The ETF gives diversified exposure without betting on a single company before major names go public.' },
+  'ARKX': { sector:'Space & Defense ETF', what:'ARK Space Exploration and Innovation ETF is an actively managed fund of 35 companies spanning orbital and sub-orbital aerospace, enabling technologies and beneficiaries of space activity. Top holdings include Rocket Lab and L3Harris.', why:'Broader than a pure space bet — it blends launch, defence, drones and the AI and semiconductor names that enable them. Held SpaceX pre-IPO via an SPV and is positioned to add public shares quickly after listing.' },
   'UFOX': { sector:'Connectivity ETF', what:'Defiance Connective Technologies ETF holds companies in 5G, satellite internet and connectivity infrastructure, including space-adjacent technology businesses.', why:'Connectivity infrastructure is the backbone of AI deployment at scale. Captures the theme without single-stock risk, with some SpaceX ecosystem adjacency.' },
   'MU':   { sector:'Memory Semiconductors', what:'Micron Technology makes DRAM and NAND memory chips, the RAM that every AI server, smartphone and computer runs on. Third largest memory chip maker globally.', why:'AI servers require 6-8x more memory than traditional servers. Micron has locked in long-term supply agreements covering 60-70% of server DDR5 volumes through 2029.' },
   'KWEB': { sector:'China Internet ETF', what:'KraneShares China Internet ETF holds Alibaba, Tencent, Meituan, JD.com and other major Chinese internet companies. Trades on US exchanges in dollars.', why:'Chinese internet companies trade at a fraction of US equivalents. Alibaba at 10x earnings vs Amazon at 35x. A trade de-escalation could re-rate the entire sector rapidly.' },
