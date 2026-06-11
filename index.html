@@ -676,7 +676,6 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
       <div>
         <div class="ov-snap-label">Total · both accounts</div>
         <div class="ov-snap-val" id="ov-combined-val">—</div>
-        <div class="ov-snap-zar" id="ov-combined-zar">—</div>
         <div class="ov-snap-pl" id="ov-combined-pl">—</div>
       </div>
       <div class="ov-snap-stats">
@@ -982,7 +981,6 @@ function renderOverview() {
   const worstToday = movers[movers.length - 1];
 
   const cvEl    = document.getElementById('ov-combined-val');
-  const czarEl  = document.getElementById('ov-combined-zar');
   const cplEl   = document.getElementById('ov-combined-pl');
   const ccEl    = document.getElementById('ov-combined-cost');
   const cdayEl  = document.getElementById('ov-combined-day');
@@ -1022,7 +1020,6 @@ function renderOverview() {
     const goalZAR   = 1000000;
     const pctDone   = Math.min(valZAR / goalZAR * 100, 100);
     const remaining = Math.max(goalZAR - valZAR, 0);
-    if (czarEl) czarEl.textContent = '≈ ' + fmtR(valZAR) + ' @ R' + zarRate.toFixed(2) + '/$';
     if (goalPctEl) {
       goalPctEl.textContent  = pctDone.toFixed(1) + '%';
       goalFillEl.style.width = pctDone.toFixed(1) + '%';
@@ -1030,7 +1027,6 @@ function renderOverview() {
       goalRemEl.textContent  = fmtR(remaining) + ' to go';
     }
   } else if (combinedVal > 0) {
-    if (czarEl) czarEl.textContent = 'fetching live USD/ZAR…';
     if (goalPctEl) goalPctEl.textContent = 'waiting for live rate';
   }
 }
