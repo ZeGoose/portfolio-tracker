@@ -573,6 +573,76 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .cal-leg { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:9px; color:var(--cream-3); }
 .cal-leg-dot { width:8px; height:8px; border-radius:1px; }
 .earnings-empty { font-family:var(--mono); font-size:11px; color:var(--cream-3); padding:60px; text-align:center; animation:blink 1.4s ease infinite; }
+
+/* ════════════════════════════════════════════════════════
+   MOBILE — only applies at ≤640px, laptop view untouched
+   ════════════════════════════════════════════════════════ */
+@media (max-width:640px){
+  /* Header & tabs */
+  .topbar { padding:14px 16px; gap:12px; }
+  .tabs { padding:0 8px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { padding:13px 14px; font-size:13px; white-space:nowrap; flex-shrink:0; }
+
+  /* Panel padding */
+  #panel-portfolio { padding:18px 16px 70px; }
+  #panel-alerts, #panel-news, #panel-forecast, #panel-earnings { padding:18px 16px 70px; }
+
+  /* Goal card */
+  .ov-goal { padding:14px 16px; }
+  .ov-goal-sub { flex-direction:column; gap:3px; }
+
+  /* Snapshot — stack value above stats, full width */
+  .ov-snap { flex-direction:column; align-items:stretch; gap:18px; padding:20px; }
+  .ov-snap-val { font-size:38px; }
+  .ov-snap-stats { grid-template-columns:1fr 1fr; gap:14px 16px; width:100%; }
+
+  /* Portfolio selector — stack into one column */
+  .ov-cards { grid-template-columns:1fr; gap:8px; }
+
+  /* Market pulse — wrap instead of overflow */
+  .pulse-strip { flex-wrap:wrap; gap:14px 24px; padding:14px 16px; }
+
+  /* Metrics — 2 columns */
+  .metrics { grid-template-columns:1fr 1fr; gap:8px; }
+  .metric { padding:14px 16px; }
+  .metric-val { font-size:18px; }
+
+  /* Holdings table — convert to horizontal scroll, hide low-priority cols */
+  .tbl-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .tbl { min-width:560px; }
+  .tbl th, .tbl td { padding:12px 10px; font-size:12px; }
+  .tbl th:nth-child(3), .tbl td:nth-child(3),  /* Shares */
+  .tbl th:nth-child(4), .tbl td:nth-child(4) { /* Avg cost */
+    display:none;
+  }
+  .co-name { font-size:13px; }
+
+  /* Allocation bars */
+  .alloc-bars { padding:16px; }
+  .alloc-name { width:90px; font-size:12px; }
+
+  /* Section headers */
+  .sh { flex-wrap:wrap; gap:4px; }
+
+  /* Forecast pills scroll */
+  #forecast-pills { overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap !important; scrollbar-width:none; }
+  #forecast-pills::-webkit-scrollbar { display:none; }
+
+  /* Watchlist grid single column */
+  .wl-grid { grid-template-columns:1fr !important; }
+
+  /* Earnings calendar horizontal scroll */
+  .cal-grid { min-width:520px; }
+  #panel-earnings { overflow-x:auto; -webkit-overflow-scrolling:touch; padding:18px 12px 70px; }
+}
+
+/* Extra-small phones */
+@media (max-width:380px){
+  .ov-snap-val { font-size:32px; }
+  .ov-snap-stats { grid-template-columns:1fr; }
+  .metrics { grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
