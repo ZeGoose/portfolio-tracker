@@ -578,40 +578,62 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
    MOBILE — only applies at ≤640px, laptop view untouched
    ════════════════════════════════════════════════════════ */
 @media (max-width:640px){
-  /* Header & tabs */
+  /* Header & tabs — deliberate horizontal scroll */
   .topbar { padding:14px 16px; gap:12px; }
-  .tabs { padding:0 8px; justify-content:flex-start; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .tabs {
+    padding:0 16px;
+    justify-content:flex-start;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    scroll-snap-type:x proximity;
+    /* fade the right edge to hint there's more to swipe */
+    -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+    mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+  }
   .tabs::-webkit-scrollbar { display:none; }
-  .tab { padding:13px 14px; font-size:13px; white-space:nowrap; flex-shrink:0; }
+  .tab {
+    padding:15px 18px;
+    font-size:14px;
+    white-space:nowrap;
+    flex-shrink:0;
+    scroll-snap-align:start;
+  }
 
-  /* Panel padding */
-  #panel-portfolio { padding:18px 16px 70px; }
-  #panel-alerts, #panel-news, #panel-forecast, #panel-earnings { padding:18px 16px 70px; }
+  /* Panel padding — more room at the sides */
+  #panel-portfolio { padding:20px 18px 80px; }
+  #panel-alerts, #panel-news, #panel-forecast, #panel-earnings { padding:20px 18px 80px; }
 
-  /* Goal card */
-  .ov-goal { padding:14px 16px; }
-  .ov-goal-sub { flex-direction:column; gap:3px; }
+  /* Dashboard — more space between each block */
+  .ov-dashboard { margin-bottom:32px; }
+  .ov-goal { padding:16px 18px; margin-bottom:14px; }
+  .ov-goal-sub { margin-top:10px; }
 
-  /* Snapshot — stack value above stats, full width */
-  .ov-snap { flex-direction:column; align-items:stretch; gap:18px; padding:20px; }
-  .ov-snap-val { font-size:38px; }
-  .ov-snap-stats { grid-template-columns:1fr 1fr; gap:14px 16px; width:100%; }
+  /* Snapshot — generous internal spacing */
+  .ov-snap { flex-direction:column; align-items:stretch; gap:22px; padding:24px 22px; margin-bottom:14px; }
+  .ov-snap-val { font-size:40px; }
+  .ov-snap-stats { grid-template-columns:1fr 1fr; gap:20px 18px; width:100%; }
+  .ov-ss-val { font-size:15px; }
 
-  /* Portfolio selector — stack into one column */
-  .ov-cards { grid-template-columns:1fr; gap:8px; }
+  /* Portfolio selector — stack with breathing room */
+  .ov-cards { grid-template-columns:1fr; gap:10px; }
+  .ov-card { padding:16px 18px; }
 
-  /* Market pulse — wrap instead of overflow */
-  .pulse-strip { flex-wrap:wrap; gap:14px 24px; padding:14px 16px; }
+  /* Market pulse — wrap with vertical room */
+  .pulse-strip { flex-wrap:wrap; gap:16px 28px; padding:18px 20px; margin-bottom:28px; }
 
-  /* Metrics — 2 columns */
-  .metrics { grid-template-columns:1fr 1fr; gap:8px; }
-  .metric { padding:14px 16px; }
-  .metric-val { font-size:18px; }
+  /* Metrics — 2 columns, taller */
+  .metrics { grid-template-columns:1fr 1fr; gap:10px; margin-bottom:32px; }
+  .metric { padding:18px 18px; }
+  .metric-val { font-size:19px; }
 
-  /* Holdings table — convert to horizontal scroll, hide low-priority cols */
+  /* Section headers — clear separation above each section */
+  .sh { flex-wrap:wrap; gap:5px; margin-top:14px; margin-bottom:16px; }
+
+  /* Holdings table — horizontal scroll, hide low-priority cols */
   .tbl-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .tbl { min-width:560px; }
-  .tbl th, .tbl td { padding:12px 10px; font-size:12px; }
+  .tbl { min-width:540px; }
+  .tbl th, .tbl td { padding:14px 12px; font-size:12px; }
   .tbl th:nth-child(3), .tbl td:nth-child(3),  /* Shares */
   .tbl th:nth-child(4), .tbl td:nth-child(4) { /* Avg cost */
     display:none;
@@ -619,29 +641,34 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
   .co-name { font-size:13px; }
 
   /* Allocation bars */
-  .alloc-bars { padding:16px; }
-  .alloc-name { width:90px; font-size:12px; }
-
-  /* Section headers */
-  .sh { flex-wrap:wrap; gap:4px; }
+  .alloc-bars { padding:20px 18px; gap:16px; }
+  .alloc-name { width:88px; font-size:12px; }
 
   /* Forecast pills scroll */
   #forecast-pills { overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap !important; scrollbar-width:none; }
   #forecast-pills::-webkit-scrollbar { display:none; }
 
-  /* Watchlist grid single column */
-  .wl-grid { grid-template-columns:1fr !important; }
+  /* Watchlist grid — 2 columns so cards aren't oversized */
+  .wl-grid { grid-template-columns:1fr 1fr !important; gap:8px; }
 
   /* Earnings calendar horizontal scroll */
   .cal-grid { min-width:520px; }
-  #panel-earnings { overflow-x:auto; -webkit-overflow-scrolling:touch; padding:18px 12px 70px; }
+  #panel-earnings { overflow-x:auto; -webkit-overflow-scrolling:touch; padding:20px 14px 80px; }
 }
 
-/* Extra-small phones */
-@media (max-width:380px){
-  .ov-snap-val { font-size:32px; }
-  .ov-snap-stats { grid-template-columns:1fr; }
-  .metrics { grid-template-columns:1fr; }
+/* Standard phones (iPhone 14 = 390px, Pro Max = 430px) */
+@media (max-width:430px){
+  #panel-portfolio { padding:18px 14px 80px; }
+  #panel-alerts, #panel-news, #panel-forecast, #panel-earnings { padding:18px 14px 80px; }
+  .ov-snap-val { font-size:36px; }
+  .ov-snap { padding:22px 18px; gap:20px; }
+  .ov-snap-stats { gap:18px 16px; }
+  .ov-goal { padding:15px 16px; }
+  .pulse-strip { gap:14px 22px; padding:16px; }
+  .metric { padding:16px; }
+  /* Snapshot label/value tighter line-height for clean stacking */
+  .ov-ss { gap:4px; }
+  .tbl th, .tbl td { padding:13px 11px; }
 }
 </style>
 </head>
@@ -737,7 +764,6 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
       <div class="ov-goal-track"><div class="ov-goal-fill" id="ov-goal-fill" style="width:0%"></div></div>
       <div class="ov-goal-sub">
         <div class="ov-goal-sub-val" id="ov-goal-current">—</div>
-        <div class="ov-goal-sub-val" id="ov-goal-remaining">—</div>
       </div>
     </div>
 
@@ -921,6 +947,7 @@ const WATCHLIST = [
   { name:'Freeport-McMoRan',    ticker:'FCX'  },
   { name:'Cameco',              ticker:'CCJ'  },
   { name:'Booking Holdings',    ticker:'BKNG' },
+  { name:'Palantir',            ticker:'PLTR' },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -1067,7 +1094,7 @@ function renderOverview() {
     cplEl.textContent = sign(combinedPL) + fmt(combinedPL) + ' (' + sign(combinedPLp) + Math.abs(combinedPLp).toFixed(1) + '%) all time';
     cplEl.style.color = combinedPL >= 0 ? 'var(--green)' : 'var(--red)';
   }
-  if (ccEl && investedVal > 0) ccEl.textContent = fmt(investedVal);
+  if (ccEl && investedCost > 0) ccEl.textContent = fmt(investedCost);
   if (ccashEl) ccashEl.textContent = fmt(TRAVEL_CASH);
   if (cdayEl && allHave.length) {
     cdayEl.textContent = sign(combinedDay) + fmt(combinedDay);
@@ -1084,18 +1111,15 @@ function renderOverview() {
   const goalPctEl  = document.getElementById('ov-goal-pct');
   const goalFillEl = document.getElementById('ov-goal-fill');
   const goalCurEl  = document.getElementById('ov-goal-current');
-  const goalRemEl  = document.getElementById('ov-goal-remaining');
 
   if (combinedVal > 0 && zarRate) {
     const valZAR    = combinedVal * zarRate;
     const goalZAR   = 1000000;
     const pctDone   = Math.min(valZAR / goalZAR * 100, 100);
-    const remaining = Math.max(goalZAR - valZAR, 0);
     if (goalPctEl) {
       goalPctEl.textContent  = pctDone.toFixed(1) + '%';
       goalFillEl.style.width = pctDone.toFixed(1) + '%';
       goalCurEl.textContent  = fmtR(valZAR);
-      goalRemEl.textContent  = fmtR(remaining) + ' to go';
     }
   } else if (combinedVal > 0) {
     if (goalPctEl) goalPctEl.textContent = 'waiting for live rate';
@@ -1318,6 +1342,7 @@ const COMPANY_INFO = {
   'NBIS': { sector:'AI Infrastructure / Cloud', what:'Nebius Group is a European AI-native cloud provider spun out of Yandex, offering GPU compute and AI infrastructure services with data centres in Finland.', why:'Europe needs AI cloud infrastructure independent of US hyperscalers. Nebius is positioned as the European alternative. Early stage and high risk but the addressable market is enormous.' },
   'UFO':  { sector:'Space ETF', what:'Procure Space ETF holds companies with significant space industry revenue including satellite operators, launch companies and defence contractors with space exposure.', why:'Pre-SpaceX IPO positioning. Space is the next infrastructure frontier. The ETF gives diversified exposure without betting on a single company before major names go public.' },
   'ARKX': { sector:'Space & Defense ETF', what:'ARK Space Exploration and Innovation ETF is an actively managed fund of 35 companies spanning orbital and sub-orbital aerospace, enabling technologies and beneficiaries of space activity. Top holdings include Rocket Lab and L3Harris.', why:'Broader than a pure space bet — it blends launch, defence, drones and the AI and semiconductor names that enable them. Held SpaceX pre-IPO via an SPV and is positioned to add public shares quickly after listing.' },
+  'PLTR': { sector:'AI / Data Analytics', what:'Palantir builds data analytics and AI platforms — Gotham for government and defence, Foundry for commercial enterprises, and AIP for deploying large language models on private data. Deep ties to US defence and intelligence.', why:'Becoming critical infrastructure for AI in government and large enterprise. Sticky multi-year contracts and a widening moat as customers build their operations on its platform. Modern warfare and defence spending are structural tailwinds.' },
   'UFOX': { sector:'Connectivity ETF', what:'Defiance Connective Technologies ETF holds companies in 5G, satellite internet and connectivity infrastructure, including space-adjacent technology businesses.', why:'Connectivity infrastructure is the backbone of AI deployment at scale. Captures the theme without single-stock risk, with some SpaceX ecosystem adjacency.' },
   'MU':   { sector:'Memory Semiconductors', what:'Micron Technology makes DRAM and NAND memory chips, the RAM that every AI server, smartphone and computer runs on. Third largest memory chip maker globally.', why:'AI servers require 6-8x more memory than traditional servers. Micron has locked in long-term supply agreements covering 60-70% of server DDR5 volumes through 2029.' },
   'KWEB': { sector:'China Internet ETF', what:'KraneShares China Internet ETF holds Alibaba, Tencent, Meituan, JD.com and other major Chinese internet companies. Trades on US exchanges in dollars.', why:'Chinese internet companies trade at a fraction of US equivalents. Alibaba at 10x earnings vs Amazon at 35x. A trade de-escalation could re-rate the entire sector rapidly.' },
@@ -2132,6 +2157,8 @@ function showTab(name, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('panel-' + name).classList.add('active');
   el.classList.add('active');
+  // Keep the active tab visible in the horizontal scroll on mobile
+  if (el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
   if (name === 'news' && !newsCache.length) loadNews();
   if (name === 'earnings') loadEarnings();
   if (name === 'forecast') initForecast();
