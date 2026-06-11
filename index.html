@@ -1035,19 +1035,50 @@ function renderOverview() {
   }
 }
 
+// ═══════════════════════════════════════════════════════
+// LIVE USD/ZAR — tries multiple free sources in sequence
+// ═══════════════════════════════════════════════════════
+async function fetchZARRate() {
+  const setRate = (rate, label) => {
+    if (!rate || rate < 5 || rate > 40) return false; // sanity bounds for USD/ZAR
+    mktData['ZAR'] = rate;
+    const el = document.getElementById('ps-zar');
+    const chg = document.getElementById('ps-zar-chg');
+    if (el)  el.textContent = 'R' + rate.toFixed(2);
+    if (chg) { chg.textContent = label || 'Live'; chg.className = 'ps-chg neu'; }
+    renderOverview();
+    return true;
+  };
+
+  // Source 1 — Frankfurter (ECB data, no key, CORS-open)
+  try {
+    const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=ZAR');
+    if (r.ok) { const d = await r.json(); if (d?.rates?.ZAR && setRate(d.rates.ZAR, 'Live · ECB')) return; }
+  } catch(e) { console.warn('Frankfurter failed', e); }
+
+  // Source 2 — open.er-api.com (no key, CORS-open)
+  try {
+    const r = await fetch('https://open.er-api.com/v6/latest/USD');
+    if (r.ok) { const d = await r.json(); if (d?.rates?.ZAR && setRate(d.rates.ZAR, 'Live')) return; }
+  } catch(e) { console.warn('er-api failed', e); }
+
+  // Source 3 — currency-api on jsDelivr CDN (no key, very reliable, CORS-open)
+  try {
+    const r = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+    if (r.ok) { const d = await r.json(); const z = d?.usd?.zar; if (z && setRate(z, 'Live')) return; }
+  } catch(e) { console.warn('currency-api failed', e); }
+
+  // All sources failed — leave unset so goal shows "waiting", never a fake number
+  console.error('All ZAR rate sources failed');
+  const chg = document.getElementById('ps-zar-chg');
+  if (chg) { chg.textContent = 'rate unavailable'; chg.className = 'ps-chg neg'; }
+}
+
 async function init() {
   document.getElementById('refresh-btn').disabled = true;
 
-  // Step 0 — Fetch live ZAR rate immediately so goal tracker is accurate
-  try {
-    const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=ZAR');
-    const d = await r.json();
-    if (d.rates && d.rates.ZAR) {
-      mktData['ZAR'] = d.rates.ZAR;
-      document.getElementById('ps-zar').textContent = 'R' + d.rates.ZAR.toFixed(2);
-      document.getElementById('ps-zar-chg').textContent = 'Live';
-    }
-  } catch(e) { console.warn('ZAR fetch failed — will retry via pulse', e); }
+  // Step 0 — Fetch live ZAR rate from a chain of free sources
+  await fetchZARRate();
 
   // Step 1 — Load cache instantly (shows real numbers in <100ms)
   const hasCached = loadCache();
@@ -1485,35 +1516,8 @@ function timeAgo(ts){const d=Date.now()-ts*1000,h=Math.floor(d/3600000),dy=Math.
 // MARKET PULSE STRIP
 // ═══════════════════════════════════════════════════════
 async function fetchPulse() {
-  // ZAR/USD — live rate from Frankfurter (open exchange rate API, no key needed)
-  try {
-    const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=ZAR');
-    const d = await r.json();
-    if (d.rates && d.rates.ZAR) {
-      const cur = d.rates.ZAR;
-      mktData['ZAR'] = cur;
-      document.getElementById('ps-zar').textContent = 'R' + cur.toFixed(2);
-      document.getElementById('ps-zar-chg').textContent = 'Live rate';
-      document.getElementById('ps-zar-chg').className = 'ps-chg neu';
-      renderOverview();
-    }
-  } catch(e) {
-    // Fallback: try Finnhub forex
-    try {
-      const r = await fetch(`https://finnhub.io/api/v1/forex/candle?symbol=OANDA:USD_ZAR&resolution=D&count=2&token=${FINNHUB_KEY}`);
-      const d = await r.json();
-      if (d.c && d.c.length) {
-        const cur = d.c[d.c.length-1];
-        const prev = d.c.length > 1 ? d.c[d.c.length-2] : cur;
-        const chg = ((cur - prev) / prev) * 100;
-        mktData['ZAR'] = Number(cur);
-        document.getElementById('ps-zar').textContent = 'R' + Number(cur).toFixed(2);
-        document.getElementById('ps-zar-chg').textContent = (chg>=0?'+':'') + chg.toFixed(2) + '%';
-        document.getElementById('ps-zar-chg').className = 'ps-chg ' + (chg>=0?'pos':'neg');
-        renderOverview();
-      }
-    } catch(e2) { console.warn('ZAR fetch failed', e2); }
-  }
+  // ZAR/USD — robust multi-source fetch (only if not already loaded)
+  if (!mktData['ZAR']) await fetchZARRate();
   await sleep(150);
   // S&P 500 via SPY ETF
   try {
