@@ -113,7 +113,7 @@
   --radius-sm: 10px;
 }
 
-html, body { background:var(--ink); color:var(--cream); font-family:var(--sans); font-size:14px; line-height:1.5; min-height:100vh; font-weight:300; }
+html, body { background:var(--ink); color:var(--cream); font-family:var(--sans); font-size:14px; line-height:1.5; min-height:100vh; font-weight:300; overflow-x:hidden; max-width:100%; }
 
 /* ── TOPBAR ── */
 .topbar { display:flex; align-items:center; padding:18px 32px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--ink); z-index:100; gap:20px; }
@@ -579,7 +579,25 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
    ════════════════════════════════════════════════════════ */
 @media (max-width:640px){
   /* Header & tabs — deliberate horizontal scroll */
-  .topbar { padding:14px 16px; gap:12px; }
+  .topbar { padding:14px 16px 12px; gap:12px; flex-wrap:wrap; }
+  .brand-sub { display:none; }                 /* hide wordy subtitle on mobile */
+  .brand-name { font-size:26px; }
+  .topbar-right { margin-left:auto; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .alert-pill { font-size:10px; padding:5px 10px; line-height:1.2; white-space:nowrap; }
+  .updated { font-size:9px; }
+  .refresh-btn { display:none; }              /* replaced by pull-to-refresh on mobile */
+
+  /* Pull-to-refresh indicator */
+  #ptr {
+    position:fixed; top:0; left:0; right:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:11px; color:var(--gold);
+    height:0; overflow:hidden; z-index:200;
+    background:var(--ink); transition:height 0.15s ease;
+    pointer-events:none;
+  }
+  #ptr.armed { color:var(--cream); }
+  #ptr.spin { color:var(--gold); }
   .tabs {
     padding:0 16px;
     justify-content:flex-start;
@@ -673,6 +691,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 </style>
 </head>
 <body>
+<div id="ptr">↓ Pull to refresh</div>
 
 <!-- PASSWORD GATE -->
 <div class="gate" id="gate">
@@ -914,11 +933,11 @@ const TRAVEL_FUND = [
   { name:'Microsoft',        ticker:'MSFT', shares:0.5565, cost:413.27 },
   { name:'Vanguard S&P 500', ticker:'VOO',  shares:1.2574, cost:607.62 },
   { name:'Booking Holdings', ticker:'BKNG', shares:1.1886, cost:168.26 },
-  { name:'ARK Space & Defense', ticker:'ARKX', shares:8, cost:33.37 },
+  { name:'ARK Space & Defense', ticker:'ARKX', shares:8.0000, cost:37.50 },
 ];
 
-// Uninvested cash waiting to be deployed (USD)
-const TRAVEL_CASH = 624;
+// Uninvested cash in EasyEquities USD ("Funds to Invest")
+const TRAVEL_CASH = 322.51;
 
 const PORTFOLIOS = {
   watcher:  { label:'Vestact',       sub:'Main portfolio · USD',  data: PORTFOLIO },
@@ -2163,6 +2182,45 @@ function showTab(name, el) {
   if (name === 'earnings') loadEarnings();
   if (name === 'forecast') initForecast();
 }
+
+// ═══════════════════════════════════════════════════════
+// PULL TO REFRESH (mobile)
+// ═══════════════════════════════════════════════════════
+(function(){
+  const ptr = document.getElementById('ptr');
+  let startY = 0, pulling = false, dist = 0;
+  const THRESHOLD = 70, MAX = 90;
+
+  window.addEventListener('touchstart', e => {
+    // Only start a pull when scrolled to the very top
+    if (window.scrollY <= 0) { startY = e.touches[0].clientY; pulling = true; dist = 0; }
+  }, { passive:true });
+
+  window.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    dist = e.touches[0].clientY - startY;
+    if (dist <= 0) { ptr.style.height = '0px'; return; }
+    const h = Math.min(dist * 0.5, MAX);
+    ptr.style.height = h + 'px';
+    if (dist >= THRESHOLD) { ptr.classList.add('armed'); ptr.textContent = '↑ Release to refresh'; }
+    else { ptr.classList.remove('armed'); ptr.textContent = '↓ Pull to refresh'; }
+  }, { passive:true });
+
+  window.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    if (dist >= THRESHOLD) {
+      ptr.classList.remove('armed'); ptr.classList.add('spin');
+      ptr.style.height = '44px'; ptr.textContent = '↻ Refreshing…';
+      Promise.resolve(init()).finally(() => {
+        ptr.style.height = '0px'; ptr.classList.remove('spin');
+        ptr.textContent = '↓ Pull to refresh';
+      });
+    } else {
+      ptr.style.height = '0px';
+    }
+  }, { passive:true });
+})();
 
 // ═══════════════════════════════════════════════════════
 // INIT
