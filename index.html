@@ -1068,21 +1068,25 @@ function renderOverview() {
   for (const [key, port] of Object.entries(PORTFOLIOS)) {
     const data = port.data;
     const have = data.filter(p => prices[p.ticker]);
-    const val  = have.reduce((s, p) => s + p.shares * prices[p.ticker].price, 0);
+    const holdingsVal = have.reduce((s, p) => s + p.shares * prices[p.ticker].price, 0);
+    const cash = key === 'travel' ? TRAVEL_CASH : 0;   // cash belongs to the travel account
+    const val  = holdingsVal + cash;                    // card shows full account value
     const cost = data.reduce((s, p) => s + p.shares * p.cost, 0);
-    const pl   = val - cost;
+    const pl   = holdingsVal - cost;                    // P&L on invested holdings only
     const plp  = cost > 0 ? pl / cost * 100 : 0;
 
     const valEl = document.getElementById('ov-val-' + key);
     const plEl  = document.getElementById('ov-pl-' + key);
     const posEl = document.getElementById('ov-pos-' + key);
 
-    if (valEl && val > 0) {
+    if (valEl && holdingsVal > 0) {
       valEl.textContent = fmt(val);
       plEl.textContent  = sign(pl) + fmt(pl) + ' (' + sign(plp) + Math.abs(plp).toFixed(1) + '%)';
       plEl.style.color  = pl >= 0 ? 'var(--green)' : 'var(--red)';
     }
-    if (posEl) posEl.textContent = data.length + ' positions';
+    if (posEl) {
+      posEl.textContent = data.length + ' positions' + (cash > 0 ? ' + cash' : '');
+    }
   }
 
   // Combined snapshot — includes uninvested cash in total wealth
