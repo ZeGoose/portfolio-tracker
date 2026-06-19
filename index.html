@@ -912,6 +912,9 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 // ═══════════════════════════════════════════════════════
 const GEMINI_KEY  = 'AIzaSyA9ZLVcdsJ-Jrs9X0Yrjd08eu0mxA33y3g';
 const FINNHUB_KEY = 'd7orkqhr01qmthudab50d7orkqhr01qmthudab5g';
+const POLYGON_KEY = '5zRe3N7GXWUO5mhuiRtvgFdqx0ozpdsK';
+// Cache of verified 52-week highs from Polygon (real price history), keyed by ticker
+const high52Cache = {};
 const GEMINI_URL  = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
 const TIMESFM_URL = 'https://angoose96-watcher-timesfm.hf.space';
 
@@ -967,6 +970,7 @@ const WATCHLIST = [
   { name:'Cameco',              ticker:'CCJ'  },
   { name:'Booking Holdings',    ticker:'BKNG' },
   { name:'Palantir',            ticker:'PLTR' },
+  { name:'Samsung Electronics', ticker:'SSNLF' },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -987,19 +991,73 @@ const cc  = n => n>0?'pos':n<0?'neg':'neu';
 // PRICE FETCHING
 // ═══════════════════════════════════════════════════════
 async function fetchQuote(ticker) {
-  const [qRes, mRes] = await Promise.all([
-    fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_KEY}`),
-    fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${FINNHUB_KEY}`)
-  ]);
-  const q = await qRes.json(), m = await mRes.json();
+  // Current quote from Finnhub (reliable for live price)
+  const qRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_KEY}`);
+  const q = await qRes.json();
   if (!q.c || q.c === 0) throw new Error('No data');
-  return { price:q.c, change:q.d, changePct:q.dp, high52:m?.metric?.['52WeekHigh']||null };
+  // 52-week high comes from a separate throttled Polygon pass (see refreshHighs).
+  // Use whatever verified value we already have cached; null until then = no alert.
+  const high52 = high52Cache[ticker] ?? null;
+  return { price:q.c, change:q.d, changePct:q.dp, high52, dayHigh:q.h, dayLow:q.l };
+}
+
+// ── Verified 52-week highs from Polygon real price history ──────────────────
+// Polygon free tier = 5 calls/min, so we fetch slowly in the background and
+// persist results in localStorage for 24h. A stock NEVER shows a buy alert
+// until its real high has been verified — no guessed or projected data.
+const HIGH_CACHE_KEY = 'watcher-high52-v1';
+const HIGH_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+function loadHighCache() {
+  try {
+    const raw = localStorage.getItem(HIGH_CACHE_KEY);
+    if (!raw) return;
+    const { ts, highs } = JSON.parse(raw);
+    if (Date.now() - ts < HIGH_TTL) Object.assign(high52Cache, highs);
+  } catch(e) {}
+}
+
+function saveHighCache() {
+  try {
+    localStorage.setItem(HIGH_CACHE_KEY, JSON.stringify({ ts: Date.now(), highs: high52Cache }));
+  } catch(e) {}
+}
+
+async function fetch52WeekHigh(ticker) {
+  try {
+    const to = new Date();
+    const from = new Date(); from.setDate(from.getDate() - 365);
+    const f = d => d.toISOString().slice(0,10);
+    const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/day/${f(from)}/${f(to)}?adjusted=true&sort=desc&limit=370&apiKey=${POLYGON_KEY}`;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d.results || !d.results.length) return null;
+    const hi = Math.max(...d.results.map(bar => bar.h).filter(h => h > 0));
+    return (hi && isFinite(hi)) ? hi : null;
+  } catch(e) {
+    console.warn('52wk high fetch failed for', ticker, e);
+    return null;
+  }
+}
+
+// Background pass: fetch any missing 52-week highs at 4/min (under Polygon's limit)
+async function refreshHighs(tickers) {
+  const missing = [...new Set(tickers)].filter(t => !(t in high52Cache));
+  for (const t of missing) {
+    const hi = await fetch52WeekHigh(t);
+    high52Cache[t] = hi;
+    if (prices[t]) prices[t].high52 = hi;   // patch live object so alerts recompute
+    saveHighCache();
+    renderPortfolio(); renderAlerts(); renderTopbarAlerts();
+    await sleep(16000); // ~3.75/min, safely under Polygon's 5/min free limit
+  }
 }
 
 // ═══════════════════════════════════════════════════════
 // PRICE CACHE — localStorage for instant load
 // ═══════════════════════════════════════════════════════
-const CACHE_KEY = 'watcher-prices-v1';
+const CACHE_KEY = 'watcher-prices-v2';
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
 function saveCache() {
@@ -1018,6 +1076,10 @@ function loadCache() {
     const { ts, prices: cached } = JSON.parse(raw);
     if (Date.now() - ts > CACHE_TTL) return false;
     Object.assign(prices, cached);
+    // Backfill verified 52-week highs from their own (longer-lived) cache
+    for (const t in prices) {
+      if (t in high52Cache) prices[t].high52 = high52Cache[t];
+    }
     return true;
   } catch(e) { return false; }
 }
@@ -1191,6 +1253,9 @@ async function fetchZARRate() {
 async function init() {
   document.getElementById('refresh-btn').disabled = true;
 
+  // Load verified 52-week highs from previous sessions (24h cache)
+  loadHighCache();
+
   // Step 0 — Fetch live ZAR rate from a chain of free sources
   await fetchZARRate();
 
@@ -1235,6 +1300,11 @@ async function init() {
   renderTopbarAlerts();
   document.getElementById('alert-updated').textContent =
     'Checked ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+  // Step 4 — Verify real 52-week highs from Polygon in the slow background.
+  // Alerts only appear once a ticker's genuine high is confirmed.
+  const allTickers = [...PORTFOLIO, ...TRAVEL_FUND, ...WATCHLIST].map(s => s.ticker);
+  refreshHighs(allTickers);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1366,6 +1436,7 @@ const COMPANY_INFO = {
   'UFO':  { sector:'Space ETF', what:'Procure Space ETF holds companies with significant space industry revenue including satellite operators, launch companies and defence contractors with space exposure.', why:'Pre-SpaceX IPO positioning. Space is the next infrastructure frontier. The ETF gives diversified exposure without betting on a single company before major names go public.' },
   'ARKX': { sector:'Space & Defense ETF', what:'ARK Space Exploration and Innovation ETF is an actively managed fund of 35 companies spanning orbital and sub-orbital aerospace, enabling technologies and beneficiaries of space activity. Top holdings include Rocket Lab and L3Harris.', why:'Broader than a pure space bet — it blends launch, defence, drones and the AI and semiconductor names that enable them. Held SpaceX pre-IPO via an SPV and is positioned to add public shares quickly after listing.' },
   'PLTR': { sector:'AI / Data Analytics', what:'Palantir builds data analytics and AI platforms — Gotham for government and defence, Foundry for commercial enterprises, and AIP for deploying large language models on private data. Deep ties to US defence and intelligence.', why:'Becoming critical infrastructure for AI in government and large enterprise. Sticky multi-year contracts and a widening moat as customers build their operations on its platform. Modern warfare and defence spending are structural tailwinds.' },
+  'SSNLF':{ sector:'Memory / Electronics', what:'Samsung Electronics is the world largest memory chip maker (DRAM and NAND), a leader in smartphones, displays and a growing contract foundry competing with TSMC. Primary listing is in Korea; SSNLF is a thinly-traded US OTC line.', why:'Core beneficiary of the AI memory super-cycle alongside SK Hynix and Micron. Building HBM capacity for AI accelerators and pursuing advanced foundry. Note: the US OTC ticker is illiquid and may show stale prices — the real listing is Korea 005930.' },
   'UFOX': { sector:'Connectivity ETF', what:'Defiance Connective Technologies ETF holds companies in 5G, satellite internet and connectivity infrastructure, including space-adjacent technology businesses.', why:'Connectivity infrastructure is the backbone of AI deployment at scale. Captures the theme without single-stock risk, with some SpaceX ecosystem adjacency.' },
   'MU':   { sector:'Memory Semiconductors', what:'Micron Technology makes DRAM and NAND memory chips, the RAM that every AI server, smartphone and computer runs on. Third largest memory chip maker globally.', why:'AI servers require 6-8x more memory than traditional servers. Micron has locked in long-term supply agreements covering 60-70% of server DDR5 volumes through 2029.' },
   'KWEB': { sector:'China Internet ETF', what:'KraneShares China Internet ETF holds Alibaba, Tencent, Meituan, JD.com and other major Chinese internet companies. Trades on US exchanges in dollars.', why:'Chinese internet companies trade at a fraction of US equivalents. Alibaba at 10x earnings vs Amazon at 35x. A trade de-escalation could re-rate the entire sector rapidly.' },
