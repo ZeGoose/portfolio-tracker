@@ -542,6 +542,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 .cal-ticker.amc { background:var(--l2-bg); color:var(--l2-color); border:1px solid var(--l2-border); }
 .cal-ticker.tbc { background:var(--ink-4); color:var(--cream-3); border:1px solid var(--border-2); }
 .cal-ticker:hover { z-index:10; transform:scale(1.05); }
+.cal-ticker.watch { border-style:dashed !important; opacity:0.85; }
 .cal-ticker .tooltip {
   display:none;
   position:absolute;
@@ -901,7 +902,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
   <div id="forecast-container"></div>
 </div>
 <div class="panel" id="panel-earnings">
-  <div class="sh" style="margin-bottom:6px"><div class="sh-title">Earnings calendar</div><div class="sh-note">Your holdings · next 90 days</div></div>
+  <div class="sh" style="margin-bottom:6px"><div class="sh-title">Earnings calendar</div><div class="sh-note">Holdings + watchlist · last 5 to next 90 days</div></div>
   <div class="earnings-intro">Hover any ticker to see the company name. Green = before market open · Orange = after market close.</div>
   <div id="earnings-container"><div class="earnings-empty">Loading earnings calendar…</div></div>
 </div>
@@ -953,7 +954,6 @@ function activePortfolio() { return PORTFOLIOS[activePortfolioKey].data; }
 const WATCHLIST = [
   { name:'AMD',                 ticker:'AMD'  },
   { name:'Cisco',               ticker:'CSCO' },
-  { name:'NuScale Power',       ticker:'SMR'  },
   { name:'Broadcom',            ticker:'AVGO' },
   { name:'TSMC',                ticker:'TSM'  },
   { name:'ASML Holding',        ticker:'ASML' },
@@ -970,7 +970,6 @@ const WATCHLIST = [
   { name:'Cameco',              ticker:'CCJ'  },
   { name:'Booking Holdings',    ticker:'BKNG' },
   { name:'Palantir',            ticker:'PLTR' },
-  { name:'Samsung Electronics', ticker:'SSNLF' },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -990,23 +989,35 @@ const cc  = n => n>0?'pos':n<0?'neg':'neu';
 // ═══════════════════════════════════════════════════════
 // PRICE FETCHING
 // ═══════════════════════════════════════════════════════
+// ADRs / foreign listings where Finnhub's 52-week-high metric is unreliable.
+// Only these few use the slower Polygon real-history source.
+const ADR_TICKERS = new Set(['TSM', 'ASML', 'NBIS']);
+
 async function fetchQuote(ticker) {
-  // Current quote from Finnhub (reliable for live price)
-  const qRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_KEY}`);
-  const q = await qRes.json();
+  if (ADR_TICKERS.has(ticker)) {
+    // ADR: fast live price from Finnhub, verified high from Polygon cache (or null)
+    const qRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_KEY}`);
+    const q = await qRes.json();
+    if (!q.c || q.c === 0) throw new Error('No data');
+    return { price:q.c, change:q.d, changePct:q.dp, high52: high52Cache[ticker] ?? null, dayHigh:q.h, dayLow:q.l };
+  }
+  // Normal US stock: Finnhub gives reliable price AND 52-week high in two fast calls
+  const [qRes, mRes] = await Promise.all([
+    fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_KEY}`),
+    fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${FINNHUB_KEY}`)
+  ]);
+  const q = await qRes.json(), m = await mRes.json();
   if (!q.c || q.c === 0) throw new Error('No data');
-  // 52-week high comes from a separate throttled Polygon pass (see refreshHighs).
-  // Use whatever verified value we already have cached; null until then = no alert.
-  const high52 = high52Cache[ticker] ?? null;
+  let high52 = m?.metric?.['52WeekHigh'] || null;
+  // Sanity guard: a real high must be >= current price. Reject obvious bad data.
+  if (high52 != null && q.c > 0 && (high52 < q.c * 0.999 || high52 > q.c * 5)) high52 = null;
   return { price:q.c, change:q.d, changePct:q.dp, high52, dayHigh:q.h, dayLow:q.l };
 }
 
-// ── Verified 52-week highs from Polygon real price history ──────────────────
-// Polygon free tier = 5 calls/min, so we fetch slowly in the background and
-// persist results in localStorage for 24h. A stock NEVER shows a buy alert
-// until its real high has been verified — no guessed or projected data.
-const HIGH_CACHE_KEY = 'watcher-high52-v1';
-const HIGH_TTL = 24 * 60 * 60 * 1000; // 24 hours
+// ── Verified 52-week highs from Polygon, for ADRs only ──────────────────────
+// Only a handful of ADRs need this, so Polygon's 5/min limit is never a problem.
+const HIGH_CACHE_KEY = 'watcher-high52-v2';
+const HIGH_TTL = 5 * 24 * 60 * 60 * 1000; // 5 days
 
 function loadHighCache() {
   try {
@@ -1041,16 +1052,17 @@ async function fetch52WeekHigh(ticker) {
   }
 }
 
-// Background pass: fetch any missing 52-week highs at 4/min (under Polygon's limit)
-async function refreshHighs(tickers) {
-  const missing = [...new Set(tickers)].filter(t => !(t in high52Cache));
-  for (const t of missing) {
+// Background pass: fetch verified highs for ADRs only (just a few, so it's quick)
+async function refreshHighs() {
+  const adrs = [...ADR_TICKERS].filter(t => !(t in high52Cache));
+  for (let i = 0; i < adrs.length; i++) {
+    const t = adrs[i];
     const hi = await fetch52WeekHigh(t);
     high52Cache[t] = hi;
-    if (prices[t]) prices[t].high52 = hi;   // patch live object so alerts recompute
+    if (prices[t]) prices[t].high52 = hi;
     saveHighCache();
     renderPortfolio(); renderAlerts(); renderTopbarAlerts();
-    await sleep(16000); // ~3.75/min, safely under Polygon's 5/min free limit
+    if (i < adrs.length - 1) await sleep(12500); // stay under Polygon 5/min
   }
 }
 
@@ -1301,10 +1313,9 @@ async function init() {
   document.getElementById('alert-updated').textContent =
     'Checked ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 
-  // Step 4 — Verify real 52-week highs from Polygon in the slow background.
-  // Alerts only appear once a ticker's genuine high is confirmed.
-  const allTickers = [...PORTFOLIO, ...TRAVEL_FUND, ...WATCHLIST].map(s => s.ticker);
-  refreshHighs(allTickers);
+  // Step 4 — Verify real 52-week highs for the few ADRs via Polygon (quick).
+  // All normal US stocks already have their high from Finnhub above.
+  refreshHighs();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1436,7 +1447,6 @@ const COMPANY_INFO = {
   'UFO':  { sector:'Space ETF', what:'Procure Space ETF holds companies with significant space industry revenue including satellite operators, launch companies and defence contractors with space exposure.', why:'Pre-SpaceX IPO positioning. Space is the next infrastructure frontier. The ETF gives diversified exposure without betting on a single company before major names go public.' },
   'ARKX': { sector:'Space & Defense ETF', what:'ARK Space Exploration and Innovation ETF is an actively managed fund of 35 companies spanning orbital and sub-orbital aerospace, enabling technologies and beneficiaries of space activity. Top holdings include Rocket Lab and L3Harris.', why:'Broader than a pure space bet — it blends launch, defence, drones and the AI and semiconductor names that enable them. Held SpaceX pre-IPO via an SPV and is positioned to add public shares quickly after listing.' },
   'PLTR': { sector:'AI / Data Analytics', what:'Palantir builds data analytics and AI platforms — Gotham for government and defence, Foundry for commercial enterprises, and AIP for deploying large language models on private data. Deep ties to US defence and intelligence.', why:'Becoming critical infrastructure for AI in government and large enterprise. Sticky multi-year contracts and a widening moat as customers build their operations on its platform. Modern warfare and defence spending are structural tailwinds.' },
-  'SSNLF':{ sector:'Memory / Electronics', what:'Samsung Electronics is the world largest memory chip maker (DRAM and NAND), a leader in smartphones, displays and a growing contract foundry competing with TSMC. Primary listing is in Korea; SSNLF is a thinly-traded US OTC line.', why:'Core beneficiary of the AI memory super-cycle alongside SK Hynix and Micron. Building HBM capacity for AI accelerators and pursuing advanced foundry. Note: the US OTC ticker is illiquid and may show stale prices — the real listing is Korea 005930.' },
   'UFOX': { sector:'Connectivity ETF', what:'Defiance Connective Technologies ETF holds companies in 5G, satellite internet and connectivity infrastructure, including space-adjacent technology businesses.', why:'Connectivity infrastructure is the backbone of AI deployment at scale. Captures the theme without single-stock risk, with some SpaceX ecosystem adjacency.' },
   'MU':   { sector:'Memory Semiconductors', what:'Micron Technology makes DRAM and NAND memory chips, the RAM that every AI server, smartphone and computer runs on. Third largest memory chip maker globally.', why:'AI servers require 6-8x more memory than traditional servers. Micron has locked in long-term supply agreements covering 60-70% of server DDR5 volumes through 2029.' },
   'KWEB': { sector:'China Internet ETF', what:'KraneShares China Internet ETF holds Alibaba, Tencent, Meituan, JD.com and other major Chinese internet companies. Trades on US exchanges in dollars.', why:'Chinese internet companies trade at a fraction of US equivalents. Alibaba at 10x earnings vs Amazon at 35x. A trade de-escalation could re-rate the entire sector rapidly.' },
@@ -1782,24 +1792,35 @@ async function loadEarnings() {
   container.innerHTML = '<div class="earnings-empty">Loading earnings calendar…</div>';
 
   const today = new Date();
+  const from  = new Date(today.getTime() - 5*24*3600*1000);   // include the last 5 days
   const in90  = new Date(today.getTime() + 90*24*3600*1000);
   const fmt   = d => d.toISOString().slice(0,10);
-  const earnings = []; // { ticker, name, date, hour }
+  const earnings = []; // { ticker, name, date, hour, watchlist }
 
-  for (const p of PORTFOLIO) {
+  // Scan portfolio holdings AND watchlist — dedupe by ticker
+  const seen = new Set();
+  const universe = [];
+  for (const p of [...PORTFOLIO, ...TRAVEL_FUND, ...WATCHLIST]) {
+    if (seen.has(p.ticker)) continue;
+    seen.add(p.ticker);
+    const isHolding = PORTFOLIO.some(h=>h.ticker===p.ticker) || TRAVEL_FUND.some(h=>h.ticker===p.ticker);
+    universe.push({ ...p, isHolding });
+  }
+
+  for (const p of universe) {
     try {
-      const r = await fetch(`https://finnhub.io/api/v1/calendar/earnings?symbol=${p.ticker}&from=${fmt(today)}&to=${fmt(in90)}&token=${FINNHUB_KEY}`);
+      const r = await fetch(`https://finnhub.io/api/v1/calendar/earnings?symbol=${p.ticker}&from=${fmt(from)}&to=${fmt(in90)}&token=${FINNHUB_KEY}`);
       const d = await r.json();
       (d?.earningsCalendar||[]).forEach(e => {
         if (!e.date) return;
-        earnings.push({ ticker: p.ticker, name: p.name, date: e.date, hour: e.hour||'tbc' });
+        earnings.push({ ticker: p.ticker, name: p.name, date: e.date, hour: e.hour||'tbc', isHolding: p.isHolding });
       });
     } catch(e) {}
-    await sleep(150);
+    await sleep(120);
   }
 
   if (!earnings.length) {
-    container.innerHTML = '<div class="earnings-empty" style="animation:none;opacity:0.5">No earnings dates found in the next 90 days.</div>';
+    container.innerHTML = '<div class="earnings-empty" style="animation:none;opacity:0.5">No earnings dates found.</div>';
     return;
   }
 
@@ -1844,9 +1865,10 @@ async function loadEarnings() {
       const tickers = dayEarnings.map(e => {
         const cls = e.hour === 'bmo' ? 'bmo' : e.hour === 'amc' ? 'amc' : 'tbc';
         const when = e.hour === 'bmo' ? 'Before open' : e.hour === 'amc' ? 'After close' : 'Time TBC';
-        return `<span class="cal-ticker ${cls}">
+        const tag = e.isHolding ? 'Holding' : 'Watchlist';
+        return `<span class="cal-ticker ${cls}${e.isHolding?'':' watch'}">
           ${e.ticker}
-          <span class="tooltip">${e.name} · ${when}</span>
+          <span class="tooltip">${e.name} · ${tag} · ${when}</span>
         </span>`;
       }).join('');
 
