@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=JetBrains+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
+/* ═══ THE WATCHER — stylesheet ═══ */
+/* Gate (password screen) */
 /* ── PASSWORD GATE ── */
 .gate {
   position: fixed;
@@ -82,8 +84,8 @@
   text-align: center;
 }
 .gate-error.show { display: block; }
-</style>
-<style>
+
+/* Main app */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -689,7 +691,21 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
   .ov-ss { gap:4px; }
   .tbl th, .tbl td { padding:13px 11px; }
 }
+
+/* ── Phase 3: forecast context chips + accuracy card ── */
+.fc-context { display:flex; flex-wrap:wrap; gap:6px; padding:10px 16px 2px; }
+.fc-chip { font-family:var(--mono); font-size:9px; letter-spacing:0.04em; color:var(--cream-2); background:var(--ink-3); border:1px solid var(--border-2); border-radius:3px; padding:4px 9px; }
+.fc-chip-warn { color:var(--l2-color); background:var(--l2-bg); border-color:var(--l2-border); }
+.fc-chip-dim { color:var(--cream-3); font-style:italic; }
+.fc-accuracy-card { background:var(--ink-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; margin-top:10px; }
+.fc-acc-row { display:flex; align-items:baseline; gap:10px; font-family:var(--mono); font-size:10px; color:var(--cream-2); padding:4px 0; }
+.fc-acc-row b { color:var(--gold); font-size:13px; font-weight:500; }
+.fc-acc-row span:first-child { min-width:190px; }
+.fc-acc-n { color:var(--cream-3); font-size:9px; }
+.fc-acc-note { color:var(--cream-3); font-size:9px; border-top:1px solid var(--border); margin-top:6px; padding-top:8px; }
+
 </style>
+
 </head>
 <body>
 <div id="ptr">↓ Pull to refresh</div>
@@ -742,6 +758,7 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
     }
   };
 })();
+
 </script>
 <div class="topbar">
   <div>
@@ -908,6 +925,16 @@ html, body { background:var(--ink); color:var(--cream); font-family:var(--sans);
 </div>
 
 <script>
+/* ═══ THE WATCHER · data.js ═══
+   CONFIG & TRANSACTIONS — API keys, your purchase history, watchlist.
+
+   HOW TO RECORD A NEW PURCHASE: add ONE line to TRANSACTIONS below with the
+   real shares, price and date from your broker confirmation. Everything else
+   (blended cost, position size, annualised return) is derived automatically.
+   Never edit derived numbers by hand — fix the transaction instead.
+
+   Loaded as a classic script; files share one scope, order matters. */
+
 // ═══════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════
@@ -919,29 +946,98 @@ const high52Cache = {};
 const GEMINI_URL  = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
 const TIMESFM_URL = 'https://angoose96-watcher-timesfm.hf.space';
 
-const PORTFOLIO = [
-  { name:'Apple',       ticker:'AAPL', shares:13, cost:248.40 },
-  { name:'Amazon',      ticker:'AMZN', shares:34, cost:199.71 },
-  { name:'Alphabet',    ticker:'GOOGL',shares:18, cost:177.33 },
-  { name:'Microsoft',   ticker:'MSFT', shares: 8, cost:401.38 },
-  { name:'Nvidia',      ticker:'NVDA', shares:31, cost:146.88 },
-  { name:'Visa',        ticker:'V',    shares:21, cost:348.02 },
-  { name:'Meta',        ticker:'META', shares: 6, cost:610.41 },
-  { name:'Eli Lilly',   ticker:'LLY',  shares: 4, cost:764.40 },
-  { name:'Stryker',     ticker:'SYK',  shares: 9, cost:388.85 },
-  { name:'CrowdStrike', ticker:'CRWD', shares: 28, cost:110.44 },
-];
+// ═══════════════════════════════════════════════════════
+// TRANSACTIONS — every purchase, exactly as executed
+// portfolio: 'watcher' (Vestact) or 'travel' (EasyEquities)
+// Prices/shares are PRE-split originals; splits are applied automatically.
+// date: 'YYYY-MM-DD' from the broker confirmation. Omit only if unknown
+// (position still works; annualised return shows — instead of a guess).
+// ═══════════════════════════════════════════════════════
+const TRANSACTIONS = [
+  // ── Vestact ──
+  { portfolio:'watcher', name:'Apple',       ticker:'AAPL',  shares:13,     price:248.40, date:'2025-02-25' },
+  { portfolio:'watcher', name:'Amazon',      ticker:'AMZN',  shares:34,     price:199.71, date:'2025-02-25' },
+  { portfolio:'watcher', name:'Alphabet',    ticker:'GOOGL', shares:18,     price:177.33, date:'2025-02-25' },
+  { portfolio:'watcher', name:'Microsoft',   ticker:'MSFT',  shares:8,      price:401.38, date:'2025-02-25' },
+  { portfolio:'watcher', name:'Nvidia',      ticker:'NVDA',  shares:31,     price:146.88, date:'2025-02-25' },
+  { portfolio:'watcher', name:'Visa',        ticker:'V',     shares:21,     price:348.02, date:'2025-02-25' },
+  { portfolio:'watcher', name:'Meta',        ticker:'META',  shares:6,      price:610.41, date:'2025-08-05' },
+  { portfolio:'watcher', name:'Eli Lilly',   ticker:'LLY',   shares:4,      price:764.40, date:'2025-08-05' },
+  { portfolio:'watcher', name:'Stryker',     ticker:'SYK',   shares:9,      price:388.85, date:'2025-02-25' },
+  { portfolio:'watcher', name:'CrowdStrike', ticker:'CRWD',  shares:7,      price:441.76, date:'2025-08-05' }, // pre-split original
 
-const TRAVEL_FUND = [
-  { name:'Nvidia',           ticker:'NVDA', shares:2.0381, cost:180.95 },
-  { name:'Microsoft',        ticker:'MSFT', shares:1.4085, cost:390.48 },
-  { name:'Vanguard S&P 500', ticker:'VOO',  shares:1.2574, cost:607.62 },
-  { name:'Booking Holdings', ticker:'BKNG', shares:1.1886, cost:168.26 },
-  { name:'ARK Space & Defense', ticker:'ARKX', shares:8.0000, cost:37.50 },
+  // ── Travel Fund (EasyEquities USD) ──
+  { portfolio:'travel',  name:'Nvidia',           ticker:'NVDA', shares:2.0381, price:180.95 },
+  { portfolio:'travel',  name:'Microsoft',        ticker:'MSFT', shares:0.5565, price:413.27 },
+  { portfolio:'travel',  name:'Microsoft',        ticker:'MSFT', shares:0.8520, price:375.59, date:'2026-06-18' }, // invoice #102843817
+  { portfolio:'travel',  name:'Vanguard S&P 500', ticker:'VOO',  shares:1.2574, price:607.62 },
+  { portfolio:'travel',  name:'Booking Holdings', ticker:'BKNG', shares:1.1886, price:168.26 },
+  { portfolio:'travel',  name:'ARK Space & Defense', ticker:'ARKX', shares:8,   price:37.50,  date:'2026-06-11' },
 ];
 
 // Uninvested cash in EasyEquities USD ("Funds to Invest")
 const TRAVEL_CASH = 2.51;
+
+// ═══════════════════════════════════════════════════════
+// SPLITS — known stock splits, applied to any transaction
+// dated BEFORE the split's execution date. New splits are
+// discovered automatically each week from Polygon and
+// merged in (see checkSplits in api.js).
+// ratio: shares multiply by this, price divides by it.
+// ═══════════════════════════════════════════════════════
+const KNOWN_SPLITS = {
+  CRWD: [ { date:'2026-07-02', ratio:4 } ],  // 4-for-1, July 2 2026
+};
+// Merged view: known splits + any discovered by the weekly Polygon check
+const SPLITS = JSON.parse(JSON.stringify(KNOWN_SPLITS));
+
+// ═══════════════════════════════════════════════════════
+// DERIVATION ENGINE — positions are computed, never typed
+// ═══════════════════════════════════════════════════════
+function deriveHoldings() {
+  const byKey = {};
+  for (const tx of TRANSACTIONS) {
+    let sh = tx.shares, px = tx.price;
+    // Apply every split executed after this purchase.
+    // A transaction with no date is assumed to predate any known split ONLY
+    // if that ticker has no splits; if a split exists and the date is unknown
+    // we leave the lot untouched and rely on the recorded figures.
+    for (const s of (SPLITS[tx.ticker] || [])) {
+      if (tx.date && tx.date < s.date) { sh *= s.ratio; px /= s.ratio; }
+    }
+    const k = tx.portfolio + ':' + tx.ticker;
+    if (!byKey[k]) byKey[k] = { portfolio: tx.portfolio, name: tx.name, ticker: tx.ticker, lots: [] };
+    byKey[k].lots.push({ sh, px, date: tx.date || null });
+  }
+  const positions = { watcher: [], travel: [] };
+  for (const k in byKey) {
+    const g = byKey[k];
+    const shares = g.lots.reduce((s, l) => s + l.sh, 0);
+    const invested = g.lots.reduce((s, l) => s + l.sh * l.px, 0);
+    const dates = g.lots.map(l => l.date).filter(Boolean).sort();
+    positions[g.portfolio].push({
+      name: g.name,
+      ticker: g.ticker,
+      shares: Math.round(shares * 10000) / 10000,
+      cost: Math.round((invested / shares) * 100) / 100,
+      date: dates[0] || null,          // earliest known buy date (for annualised)
+      invested: Math.round(invested * 100) / 100,
+    });
+  }
+  return positions;
+}
+
+// PORTFOLIO / TRAVEL_FUND keep their names so every render function works
+// unchanged — but they are now DERIVED. rebuildHoldings() mutates them in
+// place so all references (PORTFOLIOS etc.) stay valid after a split lands.
+const PORTFOLIO = [];
+const TRAVEL_FUND = [];
+function rebuildHoldings() {
+  const pos = deriveHoldings();
+  PORTFOLIO.length = 0;   PORTFOLIO.push(...pos.watcher);
+  TRAVEL_FUND.length = 0; TRAVEL_FUND.push(...pos.travel);
+}
+rebuildHoldings();
 
 const PORTFOLIOS = {
   watcher:  { label:'Vestact',       sub:'Main portfolio · USD',  data: PORTFOLIO },
@@ -972,6 +1068,10 @@ const WATCHLIST = [
   { name:'Palantir',            ticker:'PLTR' },
 ];
 
+
+/* ═══ THE WATCHER · api.js ═══
+   API & CACHING — price fetching, 52-week highs, localStorage caches.
+   Loaded as a classic script; files share one scope, order matters. */
 // ═══════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════
@@ -1052,9 +1152,35 @@ async function fetch52WeekHigh(ticker) {
   }
 }
 
-// Background pass: fetch verified highs for ADRs only (just a few, so it's quick)
+// Background pass: verified highs for ADRs. Tries the backend batch endpoint
+// first (one fast call, server-side cache shared by all devices); falls back
+// to direct per-ticker Polygon fetches if the backend is asleep or down.
 async function refreshHighs() {
   const adrs = [...ADR_TICKERS].filter(t => !(t in high52Cache));
+  if (!adrs.length) return;
+
+  // Fast path — backend batch
+  try {
+    const r = await fetch(`${TIMESFM_URL}/highs?tickers=${adrs.join(',')}`);
+    if (r.ok) {
+      const d = await r.json();
+      let got = false;
+      for (const t of adrs) {
+        if (t in (d.highs || {})) {
+          high52Cache[t] = d.highs[t];
+          if (prices[t]) prices[t].high52 = d.highs[t];
+          got = true;
+        }
+      }
+      if (got) {
+        saveHighCache();
+        renderPortfolio(); renderAlerts(); renderTopbarAlerts();
+        return;
+      }
+    }
+  } catch(e) { console.warn('backend /highs unavailable, falling back to Polygon', e); }
+
+  // Fallback — direct Polygon, throttled
   for (let i = 0; i < adrs.length; i++) {
     const t = adrs[i];
     const hi = await fetch52WeekHigh(t);
@@ -1114,6 +1240,93 @@ async function fetchBatch(stocks) {
   }
 }
 
+// ═══════════════════════════════════════════════════════
+// AUTOMATIC SPLIT DETECTION — weekly check against Polygon
+// Real corporate-action data (/v3/reference/splits), never
+// heuristics. New splits merge into SPLITS, holdings are
+// re-derived, and a notice appears so you know it happened.
+// ═══════════════════════════════════════════════════════
+const SPLIT_CACHE_KEY = 'watcher-splits-v1';
+const SPLIT_TTL = 7 * 24 * 60 * 60 * 1000; // check weekly
+
+function loadDiscoveredSplits() {
+  try {
+    const raw = localStorage.getItem(SPLIT_CACHE_KEY);
+    if (!raw) return null;
+    const { ts, splits } = JSON.parse(raw);
+    mergeSplits(splits);
+    return Date.now() - ts < SPLIT_TTL;  // true = still fresh, skip re-check
+  } catch(e) { return null; }
+}
+
+function mergeSplits(discovered) {
+  let changed = false;
+  for (const t in (discovered || {})) {
+    for (const s of discovered[t]) {
+      const have = (SPLITS[t] || []).some(x => x.date === s.date);
+      if (!have) { (SPLITS[t] = SPLITS[t] || []).push(s); changed = true; }
+    }
+  }
+  return changed;
+}
+
+function showSplitNotice(msgs) {
+  const note = document.getElementById('port-note');
+  if (!note || !msgs.length) return;
+  note.textContent = '⚡ Split applied: ' + msgs.join(' · ') + ' — holdings adjusted automatically';
+  note.style.display = 'block';
+}
+
+async function checkSplits() {
+  const fresh = loadDiscoveredSplits();
+  if (fresh) return;  // checked within the last week
+
+  const holdings = [...new Set(TRANSACTIONS.map(tx => tx.ticker))];
+  const earliest = TRANSACTIONS.map(tx => tx.date).filter(Boolean).sort()[0] || '2025-01-01';
+  const discovered = {};
+  const notices = [];
+
+  for (let i = 0; i < holdings.length; i++) {
+    const t = holdings[i];
+    try {
+      const url = `https://api.polygon.io/v3/reference/splits?ticker=${t}&execution_date.gte=${earliest}&limit=10&apiKey=${POLYGON_KEY}`;
+      const r = await fetch(url);
+      if (r.ok) {
+        const d = await r.json();
+        for (const s of (d.results || [])) {
+          const ratio = s.split_to / s.split_from;
+          if (!ratio || !isFinite(ratio) || ratio === 1) continue;
+          (discovered[t] = discovered[t] || []).push({ date: s.execution_date, ratio });
+        }
+      }
+    } catch(e) { console.warn('split check failed for', t, e); }
+    if (i < holdings.length - 1) await sleep(12500); // Polygon 5/min limit
+  }
+
+  // Persist the full merged registry so next week's check is instant
+  const changed = mergeSplits(discovered);
+  try {
+    localStorage.setItem(SPLIT_CACHE_KEY, JSON.stringify({ ts: Date.now(), splits: SPLITS }));
+  } catch(e) {}
+
+  if (changed) {
+    // Work out which are NEW relative to KNOWN_SPLITS for the notice
+    for (const t in SPLITS) {
+      for (const s of SPLITS[t]) {
+        const known = (KNOWN_SPLITS[t] || []).some(x => x.date === s.date);
+        if (!known) notices.push(`${t} ${s.ratio}:1 (${s.date})`);
+      }
+    }
+    rebuildHoldings();
+    renderPortfolio(); renderOverview(); renderAlerts(); renderTopbarAlerts();
+    showSplitNotice(notices);
+  }
+}
+
+
+/* ═══ THE WATCHER · portfolio.js ═══
+   PORTFOLIO TAB — overview, goal tracker, metrics, holdings table, init.
+   Loaded as a classic script; files share one scope, order matters. */
 // ═══════════════════════════════════════════════════════
 // PORTFOLIO SWITCHER
 // ═══════════════════════════════════════════════════════
@@ -1315,7 +1528,7 @@ async function init() {
 
   // Step 4 — Verify real 52-week highs for the few ADRs via Polygon (quick).
   // All normal US stocks already have their high from Finnhub above.
-  refreshHighs();
+  refreshHighs().then(() => checkSplits());
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1335,14 +1548,17 @@ function renderMetrics() {
   if(tv){ document.getElementById('m-val').textContent=$(tv,0); document.getElementById('m-val-sub').innerHTML=`<span class="${cc(pl)}">${pl>=0?'+':''}${$(pl,0)}</span>`; }
   if(plp!=null){
     const el=document.getElementById('m-ret'); el.textContent=pct(plp); el.className='metric-val '+cc(plp);
-    // Calculate annualised return based on portfolio buy dates
-    const port = activePortfolio();
-    const buyDates = port.map(p => p.date ? new Date(p.date) : new Date('2025-02-25'));
-    const oldest = new Date(Math.min(...buyDates));
-    const years = (Date.now() - oldest) / (365.25 * 24 * 3600 * 1000);
-    if(years > 0.1 && plp != null){
-      const ann = (Math.pow(1 + plp/100, 1/years) - 1) * 100;
-      document.getElementById('m-ret-sub').innerHTML=`<span class="${cc(ann)}">${ann>=0?'+':''}${ann.toFixed(1)}% annualised</span>`;
+    // Annualised return — only from real buy dates, never a guessed date
+    const dated = activePortfolio().filter(p => p.date);
+    if (!dated.length) {
+      document.getElementById('m-ret-sub').textContent='';
+    } else {
+      const oldest = new Date(Math.min(...dated.map(p => new Date(p.date))));
+      const years = (Date.now() - oldest) / (365.25 * 24 * 3600 * 1000);
+      if(years > 0.1){
+        const ann = (Math.pow(1 + plp/100, 1/years) - 1) * 100;
+        document.getElementById('m-ret-sub').innerHTML=`<span class="${cc(ann)}">${ann>=0?'+':''}${ann.toFixed(1)}% annualised</span>`;
+      }
     }
   }
   const have=activePortfolio().filter(p=>prices[p.ticker]);
@@ -1363,10 +1579,12 @@ function renderTable() {
     // Per-stock annualised return from its own buy date
     let ann=null;
     if(plp!=null){
-      const bought=new Date(p.date||'2025-02-25');
+      if(!p.date){ ann=null; } else {
+      const bought=new Date(p.date);
       const yrs=(Date.now()-bought)/(365.25*24*3600*1000);
       if(yrs>0.08) ann=(Math.pow(1+plp/100,1/yrs)-1)*100;
       else ann=plp; // too recent to annualise meaningfully
+      }
     }
     return `<tr style="animation-delay:${i*0.03}s">
       <td><div class="co-name">${p.name}</div>${lv}</td>
@@ -1401,6 +1619,10 @@ function addPosition(){
 function setStatus(t,m){const el=document.getElementById('status');el.textContent=m;el.className='status '+t;}
 function clearStatus(){const el=document.getElementById('status');el.textContent='';el.className='status';}
 
+
+/* ═══ THE WATCHER · panels.js ═══
+   ALERTS, NEWS, PULSE, EARNINGS — plus the company knowledge base.
+   Loaded as a classic script; files share one scope, order matters. */
 // ═══════════════════════════════════════════════════════
 // ALERTS
 // ═══════════════════════════════════════════════════════
@@ -1437,7 +1659,6 @@ const COMPANY_INFO = {
   'CRWD': { sector:'Cybersecurity', what:'CrowdStrike provides cloud-native endpoint security, threat intelligence and identity protection. Falcon platform protects over 29,000 enterprise customers.', why:'Cybersecurity spend is non-discretionary and growing. AI makes attacks more sophisticated, driving more spend to CrowdStrike. Dollar-based net retention above 120%.' },
   'AMD':  { sector:'Semiconductors', what:'Advanced Micro Devices designs CPUs and GPUs for data centres, PCs and gaming. The MI300 series competes directly with Nvidia in AI inference workloads.', why:'The credible number two to Nvidia. Hyperscalers want supply chain diversification. If Nvidia stumbles, AMD captures the overflow immediately.' },
   'CSCO': { sector:'Networking', what:'Cisco makes routers, switches and security hardware that run enterprise and data centre networks. Moving toward software and subscription revenue.', why:'Every enterprise network runs on Cisco. Sticky recurring revenue as it transitions to software. AI is driving massive networking upgrades that benefit Cisco core switching.' },
-  'SMR':  { sector:'Nuclear Energy', what:'NuScale Power designs small modular reactors, compact factory-built nuclear plants producing clean baseload power at a fraction of traditional reactor size.', why:'If SMRs achieve commercial scale, they solve the always-on clean power problem for data centres. High risk but enormous upside if the technology delivers.' },
   'AVGO': { sector:'Semiconductors', what:'Broadcom designs custom AI chips for Google, Meta and Apple, plus networking semiconductors and infrastructure software. Nearly $2 trillion market cap.', why:'Google and Meta pay Broadcom billions to design custom AI chips that avoid Nvidia dependency. Once a hyperscaler AI infrastructure is built on Broadcom silicon, they cannot easily leave.' },
   'TSM':  { sector:'Semiconductor Manufacturing', what:'TSMC is the world largest contract chip manufacturer, making chips for Apple, Nvidia and AMD. No competitor operates at its scale or node leadership.', why:'The most critical chokepoint in the entire technology supply chain. Without TSMC, there are no iPhones, no Nvidia GPUs, no AI. A true monopoly at the cutting edge of chip fabrication.' },
   'BKNG': { sector:'Travel / Technology', what:'Booking Holdings owns Booking.com, Priceline, Kayak and OpenTable. The largest online travel agency in the world by bookings volume.', why:'Travel is a secular growth story. Network moat — more listings attract more travellers attract more listings. AI is improving search and driving higher conversion.' },
@@ -1899,6 +2120,9 @@ async function loadEarnings() {
 }
 
 
+/* ═══ THE WATCHER · forecast.js ═══
+   FORECAST TAB — TimesFM chart and Gemini AI adjusted outlook.
+   Loaded as a classic script; files share one scope, order matters. */
 // ═══════════════════════════════════════════════════════
 // FORECAST — TimesFM integration
 // ═══════════════════════════════════════════════════════
@@ -1941,6 +2165,8 @@ async function loadForecast(ticker) {
     }
     const data = await res.json();
     forecastCache[ticker] = data;
+    scoreForecasts(data);   // settle matured predictions against actual closes
+    logForecast(data);      // record today's prediction for future scoring
     renderForecast(data);
   } catch(e) {
     container.innerHTML = `<div class="forecast-error">Could not load forecast for ${ticker}.<br>${e.message}<br><br>
@@ -1991,6 +2217,7 @@ function renderForecast(data) {
       <div class="forecast-chart-wrap">
         <div style="position:relative;height:200px;"><canvas id="forecast-chart"></canvas></div>
       </div>
+      <div class="fc-context" id="fc-context"></div>
       <div class="forecast-disclaimer">
         TimesFM 1.0 · Pattern-based forecast · Does not account for earnings, news, or macro events · Not financial advice · Generated ${new Date(data.generated_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
       </div>
@@ -2005,8 +2232,14 @@ function renderForecast(data) {
   aiWrap.innerHTML = `<div class="ai-outlook"><div class="ai-outlook-head"><span class="ai-outlook-label">AI adjusted outlook</span><span style="font-family:var(--mono);font-size:9px;color:var(--cream-3);margin-left:auto">Gemini · news + earnings + macro</span></div><div class="ai-outlook-loading">Analysing news, earnings calendar and market conditions…</div></div>`;
   document.getElementById('forecast-container').appendChild(aiWrap);
 
-  // Run Gemini analysis
-  buildAIOutlook(data);
+  // Accuracy card below the AI outlook
+  const accWrap = document.createElement('div');
+  accWrap.innerHTML = `<div class="fc-accuracy-card"><div class="ai-outlook-head"><span class="ai-outlook-label">Forecast accuracy</span><span style="font-family:var(--mono);font-size:9px;color:var(--cream-3);margin-left:auto">scored vs actual closes</span></div><div id="fc-accuracy"></div></div>`;
+  document.getElementById('forecast-container').appendChild(accWrap);
+  renderAccuracyCard();
+
+  // Context chips (volatility + real earnings date), then Gemini analysis
+  renderContextChips(data).then(ctx => buildAIOutlook(data, ctx));
 }
 
 function drawForecastChart(data) {
@@ -2146,7 +2379,7 @@ function _drawChart(data) {
 // ═══════════════════════════════════════════════════════
 const aiOutlookCache = {};
 
-async function buildAIOutlook(forecastData) {
+async function buildAIOutlook(forecastData, ctx) {
   const ticker = forecastData.ticker;
   const wrap   = document.getElementById('ai-outlook-wrap');
   if (!wrap) return;
@@ -2168,8 +2401,6 @@ async function buildAIOutlook(forecastData) {
       headlines = (nd||[]).slice(0,6).map(a => a.headline).filter(Boolean).join(' | ');
     } catch(e) {}
 
-    // 2. Check earnings proximity
-    const earningsAlert = PORTFOLIO.find(p => p.ticker === ticker);
     const spyPx  = document.getElementById('ps-spy')?.textContent || '—';
     const spyChg = document.getElementById('ps-spy-chg')?.textContent || '—';
     const zarChg = document.getElementById('ps-zar-chg')?.textContent || '—';
@@ -2186,6 +2417,8 @@ TIMESFM PATTERN FORECAST:
 MARKET CONTEXT:
 - S&P 500: ${spyPx} (${spyChg})
 - USD/ZAR: ${zarChg}
+- Realised 30d volatility: ${ctx?.vol != null ? ctx.vol + '% annualised' : 'unavailable'}
+- ${ctx?.earnings ? 'UPCOMING: ' + ctx.earnings + ' — the pattern forecast CANNOT anticipate this event' : 'No earnings scheduled inside the forecast window'}
 
 RECENT NEWS HEADLINES (last 48 hours):
 ${headlines || 'No specific news found in last 48 hours.'}
@@ -2260,11 +2493,148 @@ function renderAIOutlook(outlook) {
     </div>`;
 }
 
+
 // ═══════════════════════════════════════════════════════
-// COMBINED PORTFOLIO VALUE (both portfolios)
+// FORECAST ACCURACY TRACKER — Phase 3
+// Every forecast is logged; once 7/30 days mature, the
+// prediction is scored against ACTUAL closes returned in
+// the price history. No projections score projections —
+// only realised prices count.
 // ═══════════════════════════════════════════════════════
+const FC_LOG_KEY = 'watcher-fc-log-v1';
+
+function fcLog()      { try { return JSON.parse(localStorage.getItem(FC_LOG_KEY)) || []; } catch(e) { return []; } }
+function fcSave(log)  { try { localStorage.setItem(FC_LOG_KEY, JSON.stringify(log.slice(-200))); } catch(e) {} }
+
+// Record today's forecast for a ticker (once per ticker per day)
+function logForecast(data) {
+  const log = fcLog();
+  const today = new Date().toISOString().slice(0,10);
+  if (log.some(e => e.ticker === data.ticker && e.on === today)) return;
+  const n = data.forecast.point.length;
+  log.push({
+    ticker: data.ticker,
+    on: today,
+    price: data.current_price,
+    f7:  data.forecast.point[Math.min(6, n-1)],
+    f30: data.forecast.point[n-1],
+    lo30: data.forecast.low[n-1],
+    hi30: data.forecast.high[n-1],
+    // scored7 / scored30 filled in later, from actual closes only
+  });
+  fcSave(log);
+}
+
+// Score matured predictions for this ticker using the ACTUAL closes that the
+// backend just returned (data.history covers the last 60 trading days).
+function scoreForecasts(data) {
+  const log = fcLog();
+  const closes = {};
+  data.history.dates.forEach((d, i) => closes[d] = data.history.prices[i]);
+  const dayMs = 24*3600*1000;
+  // find the actual close on/just after a calendar date
+  const actualOn = iso => {
+    const t = new Date(iso).getTime();
+    for (let k = 0; k <= 6; k++) {
+      const d = new Date(t + k*dayMs).toISOString().slice(0,10);
+      if (d in closes) return closes[d];
+    }
+    return null;
+  };
+  let changed = false;
+  for (const e of log) {
+    if (e.ticker !== data.ticker) continue;
+    const age = (Date.now() - new Date(e.on)) / dayMs;
+    if (e.scored7 === undefined && age >= 8) {
+      const a = actualOn(new Date(new Date(e.on).getTime() + 7*dayMs).toISOString().slice(0,10));
+      if (a != null) {
+        e.actual7 = a;
+        e.scored7 = ((e.f7 > e.price) === (a > e.price));  // direction hit?
+        changed = true;
+      }
+    }
+    if (e.scored30 === undefined && age >= 31) {
+      const a = actualOn(new Date(new Date(e.on).getTime() + 30*dayMs).toISOString().slice(0,10));
+      if (a != null) {
+        e.actual30 = a;
+        e.scored30   = ((e.f30 > e.price) === (a > e.price));
+        e.inBand30   = (a >= e.lo30 && a <= e.hi30);
+        changed = true;
+      }
+    }
+  }
+  if (changed) fcSave(log);
+}
+
+// Overall accuracy across every scored prediction (all tickers)
+function accuracyStats() {
+  const log = fcLog();
+  const s7  = log.filter(e => e.scored7  !== undefined);
+  const s30 = log.filter(e => e.scored30 !== undefined);
+  const band = log.filter(e => e.inBand30 !== undefined);
+  return {
+    pending: log.filter(e => e.scored7 === undefined).length,
+    n7:  s7.length,  hit7:  s7.filter(e => e.scored7).length,
+    n30: s30.length, hit30: s30.filter(e => e.scored30).length,
+    nBand: band.length, inBand: band.filter(e => e.inBand30).length,
+  };
+}
+
+function renderAccuracyCard() {
+  const s = accuracyStats();
+  const el = document.getElementById('fc-accuracy');
+  if (!el) return;
+  if (!s.n7 && !s.n30) {
+    el.innerHTML = `<div class="fc-acc-row">Tracking started — ${s.pending} prediction${s.pending===1?'':'s'} logged, scoring begins once they are 7 days old. Accuracy is measured against actual closes only.</div>`;
+    return;
+  }
+  const pct = (h,n) => n ? Math.round(h/n*100) + '%' : '—';
+  el.innerHTML = `
+    <div class="fc-acc-row"><span>7-day direction</span><b>${pct(s.hit7,s.n7)}</b><span class="fc-acc-n">${s.n7} scored</span></div>
+    <div class="fc-acc-row"><span>30-day direction</span><b>${pct(s.hit30,s.n30)}</b><span class="fc-acc-n">${s.n30} scored</span></div>
+    <div class="fc-acc-row"><span>Actual inside forecast band</span><b>${pct(s.inBand,s.nBand)}</b><span class="fc-acc-n">${s.nBand} scored</span></div>
+    <div class="fc-acc-row fc-acc-note">${s.pending} awaiting maturity · scored against real closes, never estimates</div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// CONTEXT CHIPS — realised volatility + next real earnings
+// ═══════════════════════════════════════════════════════
+async function renderContextChips(data) {
+  const el = document.getElementById('fc-context');
+  if (!el) return;
+  const chips = [];
+
+  // Realised volatility from the backend (actual closes); classify plainly
+  if (data.realized_vol_30d != null) {
+    const v = data.realized_vol_30d;
+    const label = v < 20 ? 'low' : v < 40 ? 'moderate' : 'high';
+    chips.push(`<span class="fc-chip">Volatility ${label} · ${v}% ann.</span>`);
+  }
+
+  // Next earnings date from Finnhub's calendar (real scheduled date)
+  let earningsTxt = null;
+  try {
+    const today = new Date(), in60 = new Date(Date.now() + 60*24*3600*1000);
+    const f = d => d.toISOString().slice(0,10);
+    const r = await fetch(`https://finnhub.io/api/v1/calendar/earnings?symbol=${data.ticker}&from=${f(today)}&to=${f(in60)}&token=${FINNHUB_KEY}`);
+    const d = await r.json();
+    const next = (d?.earningsCalendar || []).sort((a,b) => a.date.localeCompare(b.date))[0];
+    if (next?.date) {
+      const days = Math.ceil((new Date(next.date) - today) / (24*3600*1000));
+      earningsTxt = `Earnings in ${days}d (${next.date})`;
+      chips.push(`<span class="fc-chip ${days <= 7 ? 'fc-chip-warn' : ''}">${earningsTxt}</span>`);
+      if (days <= 30) chips.push(`<span class="fc-chip fc-chip-dim">Forecast window crosses earnings — pattern models cannot see events</span>`);
+    }
+  } catch(e) {}
+
+  el.innerHTML = chips.join('');
+  return { vol: data.realized_vol_30d, earnings: earningsTxt };
+}
 
 
+/* ═══ THE WATCHER · main.js ═══
+   TABS, PULL-TO-REFRESH, STARTUP — loads last.
+   Loaded as a classic script; files share one scope, order matters. */
 // ═══════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════
@@ -2326,6 +2696,7 @@ init();
 fetchPulse();
 setInterval(init, 5*60*1000);
 setInterval(fetchPulse, 5*60*1000);
+
 </script>
 </body>
 </html>
