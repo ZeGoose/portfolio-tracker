@@ -968,15 +968,15 @@ const TRANSACTIONS = [
 
   // ── Travel Fund (EasyEquities USD) ──
   { portfolio:'travel',  name:'Nvidia',           ticker:'NVDA', shares:2.0381, price:180.95 },
-  { portfolio:'travel',  name:'Microsoft',        ticker:'MSFT', shares:0.5565, price:413.27 },
-  { portfolio:'travel',  name:'Microsoft',        ticker:'MSFT', shares:0.8520, price:375.59, date:'2026-06-18' }, // invoice #102843817
+  // CLOSED 2026-07-20: sold all 1.4085 MSFT @ $400.00 (gross $563.40, net $557.47)
   { portfolio:'travel',  name:'Vanguard S&P 500', ticker:'VOO',  shares:1.2574, price:607.62 },
   { portfolio:'travel',  name:'Booking Holdings', ticker:'BKNG', shares:1.1886, price:168.26 },
   { portfolio:'travel',  name:'ARK Space & Defense', ticker:'ARKX', shares:8,   price:37.50,  date:'2026-06-11' },
+  { portfolio:'travel',  name:'Micron Technology', ticker:'MU',   shares:0.6810, price:815.00, date:'2026-07-20' },
 ];
 
 // Uninvested cash in EasyEquities USD ("Funds to Invest")
-const TRAVEL_CASH = 2.51;
+const TRAVEL_CASH = 0.00;   // fully deployed after MU buy — confirm 'Funds to Invest' in EasyEquities
 
 // ═══════════════════════════════════════════════════════
 // SPLITS — known stock splits, applied to any transaction
@@ -1270,12 +1270,6 @@ function mergeSplits(discovered) {
   return changed;
 }
 
-function showSplitNotice(msgs) {
-  const note = document.getElementById('port-note');
-  if (!note || !msgs.length) return;
-  note.textContent = '⚡ Split applied: ' + msgs.join(' · ') + ' — holdings adjusted automatically';
-  note.style.display = 'block';
-}
 
 async function checkSplits() {
   const fresh = loadDiscoveredSplits();
@@ -1284,7 +1278,6 @@ async function checkSplits() {
   const holdings = [...new Set(TRANSACTIONS.map(tx => tx.ticker))];
   const earliest = TRANSACTIONS.map(tx => tx.date).filter(Boolean).sort()[0] || '2025-01-01';
   const discovered = {};
-  const notices = [];
 
   for (let i = 0; i < holdings.length; i++) {
     const t = holdings[i];
@@ -1310,16 +1303,11 @@ async function checkSplits() {
   } catch(e) {}
 
   if (changed) {
-    // Work out which are NEW relative to KNOWN_SPLITS for the notice
-    for (const t in SPLITS) {
-      for (const s of SPLITS[t]) {
-        const known = (KNOWN_SPLITS[t] || []).some(x => x.date === s.date);
-        if (!known) notices.push(`${t} ${s.ratio}:1 (${s.date})`);
-      }
-    }
+    // Splits are applied silently — holdings simply stay correct.
+    // (Only lots with a known purchase date are adjusted; undated lots are
+    // left untouched, since their recorded price may already be post-split.)
     rebuildHoldings();
     renderPortfolio(); renderOverview(); renderAlerts(); renderTopbarAlerts();
-    showSplitNotice(notices);
   }
 }
 
