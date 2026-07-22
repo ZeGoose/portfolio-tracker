@@ -1791,19 +1791,23 @@ async function loadNews() {
   } catch(e) {}
   await sleep(200);
 
-  // Company-specific news for portfolio
-  for (const p of PORTFOLIO) {
+  // Company-specific news for portfolio — parallel batches (Finnhub 60/min)
+  const fetchNews = async (p) => {
     try {
       const r = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${p.ticker}&from=${fmt(week)}&to=${fmt(now)}&token=${FINNHUB_KEY}`);
       const d = await r.json();
-      const items = (d||[]).filter(a=>a.headline).slice(0,3).map(a => ({
+      return (d||[]).filter(a=>a.headline).slice(0,3).map(a => ({
         ticker: p.ticker, source: a.source||p.ticker, headline: a.headline,
         summary: (a.summary||'').trim(), datetime: a.datetime, url: a.url||'',
         image: a.image||null
       }));
-      newsCache.push(...items);
-    } catch(e) {}
-    await sleep(150);
+    } catch(e) { return []; }
+  };
+  const BATCH = 6;
+  for (let i = 0; i < PORTFOLIO.length; i += BATCH) {
+    const results = await Promise.all(PORTFOLIO.slice(i, i+BATCH).map(fetchNews));
+    results.forEach(items => newsCache.push(...items));
+    if (i + BATCH < PORTFOLIO.length) await sleep(1100);
   }
 
   // Deduplicate and sort
@@ -2016,16 +2020,21 @@ async function loadEarnings() {
     universe.push({ ...p, isHolding });
   }
 
-  for (const p of universe) {
+  // Fetch earnings in parallel batches (Finnhub 60/min) instead of one-by-one
+  const fetchEarn = async (p) => {
     try {
       const r = await fetch(`https://finnhub.io/api/v1/calendar/earnings?symbol=${p.ticker}&from=${fmt(from)}&to=${fmt(in90)}&token=${FINNHUB_KEY}`);
       const d = await r.json();
-      (d?.earningsCalendar||[]).forEach(e => {
-        if (!e.date) return;
-        earnings.push({ ticker: p.ticker, name: p.name, date: e.date, hour: e.hour||'tbc', isHolding: p.isHolding });
-      });
-    } catch(e) {}
-    await sleep(120);
+      return (d?.earningsCalendar||[])
+        .filter(e => e.date)
+        .map(e => ({ ticker: p.ticker, name: p.name, date: e.date, hour: e.hour||'tbc', isHolding: p.isHolding }));
+    } catch(e) { return []; }
+  };
+  const EB = 6;
+  for (let i = 0; i < universe.length; i += EB) {
+    const results = await Promise.all(universe.slice(i, i+EB).map(fetchEarn));
+    results.forEach(items => earnings.push(...items));
+    if (i + EB < universe.length) await sleep(1100);
   }
 
   if (!earnings.length) {
@@ -2147,11 +2156,24 @@ async function loadForecast(ticker) {
 
   try {
     const res = await fetch(`${TIMESFM_URL}/forecast/${ticker}?days=30`);
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || `API error ${res.status}`);
+    // Read as text first so we can detect a sleeping Space (returns HTML, not JSON)
+    const raw = await res.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch(parseErr) {
+      // Not JSON → the Space is almost certainly asleep or waking up
+      if (/sleeping|starting|building|waking|Your space/i.test(raw)) {
+        container.innerHTML = `<div class="forecast-loading">Waking up the forecast server…<br>
+          <span style="opacity:0.6;font-size:10px">Free servers sleep after inactivity. First load takes 30–60 seconds — retrying automatically.</span></div>`;
+        // Auto-retry after 20s (gives the Space time to boot)
+        await sleep(20000);
+        delete forecastCache[ticker];
+        return loadForecast(ticker);
+      }
+      throw new Error('Forecast server returned an unexpected response.');
     }
-    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || `API error ${res.status}`);
     forecastCache[ticker] = data;
     scoreForecasts(data);   // settle matured predictions against actual closes
     logForecast(data);      // record today's prediction for future scoring
